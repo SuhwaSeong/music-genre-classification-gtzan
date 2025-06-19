@@ -426,7 +426,7 @@ if uploaded_files:
         file_obj.seek(0)  # 파일 포인터 초기화 (Reset file pointer)
 
         # MFCC 특징 추출 (Extract MFCC features)
-        y, sr = librosa.load(file_obj, duration=30)
+        y, sr = librosa.load(file_obj)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29) #n_mfcc= 13 → 29로 변경
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
@@ -515,7 +515,7 @@ if ctx:
                 sf.write(tmpfile.name, audio_np, samplerate)  # 임시 wav 파일 저장 (Save temp wav file)
                 
                 # librosa로 로드 및 MFCC 추출 (Load audio and extract MFCC with librosa)
-                y, sr = librosa.load(tmpfile.name, duration=30)
+                y, sr = librosa.load(tmpfile.name)
                 mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29) # n_mfcc = 13 → 29로 변경
                 mfcc_mean = np.mean(mfcc, axis=1)
                 mfcc_std = np.std(mfcc, axis=1)
