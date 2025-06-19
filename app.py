@@ -18,6 +18,7 @@ lang_dict = {
         "select_model": "Choose a model",
         "download_rf": "⬇️ Download Random Forest Classification Report",
         "download_svm": "⬇️ Download SVM Classification Report",
+        "show_heatmap_mic": "Show MFCC Heatmap (Mic Input)",
         "predicted_genre": "Predicted Genre",
         "show_heatmap": "Show MFCC Heatmap",
         "accuracy_summary": "Model Accuracy Summary",
@@ -29,7 +30,9 @@ lang_dict = {
         "select_file": "Select a file to classify",
         "choose_language": "Choose Language / 언어 선택",
         "start_info": "Please upload one or more .wav files to get started.",
-        "mic_start_info": "Click the button above to start recording."  # Mic recording start prompt
+        "mic_start_info": "Click the button above to start recording.",  # Mic recording start prompt
+        "model_desc_rf": "Random Forest: A method that makes the final decision by combining many simple decisions",
+        "model_desc_svm": "SVM: A method that finds the boundary line to separate different groups of data"        
     },
     "de": {
         "title": "Musikgenre-Klassifikator",
@@ -37,6 +40,7 @@ lang_dict = {
         "select_model": "Wählen Sie ein Modell",
         "download_rf": "⬇️ Random Forest Klassifikationsbericht herunterladen",
         "download_svm": "⬇️ SVM Klassifikationsbericht herunterladen",
+        "show_heatmap_mic": "MFCC Heatmap anzeigen (Mikrofoneingabe)",
         "predicted_genre": "Vorhergesagtes Genre",
         "show_heatmap": "MFCC Heatmap anzeigen",
         "accuracy_summary": "Modellgenauigkeitszusammenfassung",
@@ -48,7 +52,9 @@ lang_dict = {
         "select_file": "Wählen Sie eine Datei zur Klassifizierung",
         "choose_language": "Sprache auswählen / Choose Language / 언어 선택",
         "start_info": "Bitte laden Sie eine oder mehrere .wav-Dateien hoch, um zu beginnen.",
-        "mic_start_info": "Klicken Sie oben auf die Schaltfläche, um die Aufnahme zu starten."  # Mic recording start prompt
+        "mic_start_info": "Klicken Sie oben auf die Schaltfläche, um die Aufnahme zu starten.",  # Mic recording start prompt
+        "model_desc_rf": "Random Forest: Eine Methode, die eine endgültige Entscheidung trifft, indem sie viele einfache Entscheidungen kombiniert",
+        "model_desc_svm": "SVM: Eine Methode, die die Grenze findet, um verschiedene Datenmengen zu trennen"
     },
     "ko": {
         "title": "음악 장르 분류기",
@@ -56,6 +62,7 @@ lang_dict = {
         "select_model": "모델 선택",
         "download_rf": "⬇️ 랜덤 포레스트 분류 리포트 다운로드",
         "download_svm": "⬇️ SVM 분류 리포트 다운로드",
+        "show_heatmap_mic": "MFCC 히트맵 보기 (마이크 입력)",
         "predicted_genre": "예측된 장르",
         "show_heatmap": "MFCC 히트맵 보기",
         "accuracy_summary": "모델 정확도 요약",
@@ -67,7 +74,9 @@ lang_dict = {
         "select_file": "분류할 파일 선택",
         "choose_language": "언어 선택 / Choose Language",
         "start_info": "하나 이상의 .wav 파일을 업로드 해주세요.",
-        "mic_start_info": "녹음을 시작하려면 위 버튼을 클릭하세요."  # Mic recording start prompt
+        "mic_start_info": "녹음을 시작하려면 위 버튼을 클릭하세요.",  # Mic recording start prompt
+        "model_desc_rf": "랜덤 포레스트: 여러 판단 기준을 모아 최종 결정을 내리는 방법",
+        "model_desc_svm": "SVM: 데이터 경계선을 찾아 구분하는 방법",
     },
 "pl": {
     "title": "Klasyfikator gatunków muzycznych",
@@ -75,6 +84,7 @@ lang_dict = {
     "select_model": "Wybierz model",
     "download_rf": "⬇️ Pobierz raport klasyfikacji Random Forest",
     "download_svm": "⬇️ Pobierz raport klasyfikacji SVM",
+    "show_heatmap_mic": "Pokaż mapę ciepła MFCC (wejście z mikrofonu)",
     "predicted_genre": "Przewidywany gatunek",
     "show_heatmap": "Pokaż mapę ciepła MFCC",
     "accuracy_summary": "Podsumowanie dokładności modelu",
@@ -86,7 +96,9 @@ lang_dict = {
     "select_file": "Wybierz plik do klasyfikacji",
     "choose_language": "Wybierz język / Choose Language / 언어 선택",
     "start_info": "Proszę przesłać jeden lub więcej plików .wav, aby rozpocząć.",
-    "mic_start_info": "Kliknij przycisk powyżej, aby rozpocząć nagrywanie."  # 녹음 시작 안내 (Mic recording start info)
+    "mic_start_info": "Kliknij przycisk powyżej, aby rozpocząć nagrywanie.",  # 녹음 시작 안내 (Mic recording start info)
+    "model_desc_rf": "Random Forest: Metoda podejmująca ostateczną decyzję poprzez połączenie wielu prostych decyzji",
+    "model_desc_svm": "SVM: Metoda znajdująca linię graniczną rozdzielającą różne grupy danych"
 },
 "hi": {
     "title": "संगीत शैली वर्गीकर्ता",
@@ -94,6 +106,7 @@ lang_dict = {
     "select_model": "मॉडल चुनें",
     "download_rf": "⬇️ रैंडम फॉरेस्ट वर्गीकरण रिपोर्ट डाउनलोड करें",
     "download_svm": "⬇️ एसवीएम वर्गीकरण रिपोर्ट डाउनलोड करें",
+    "show_heatmap_mic": "MFCC हीटमैप दिखाएँ (माइक इनपुट)",
     "predicted_genre": "अनुमानित शैली",
     "show_heatmap": "MFCC हीटमैप दिखाएँ",
     "accuracy_summary": "मॉडल सटीकता सारांश",
@@ -105,7 +118,9 @@ lang_dict = {
     "select_file": "वर्गीकृत करने के लिए फ़ाइल चुनें",
     "choose_language": "भाषा चुनें / Choose Language / 언어 선택",
     "start_info": "शुरू करने के लिए एक या अधिक .wav फ़ाइलें अपलोड करें।",
-    "mic_start_info": "रिकॉर्डिंग शुरू करने के लिए ऊपर दिए गए बटन पर क्लिक करें।"
+    "mic_start_info": "रिकॉर्डिंग शुरू करने के लिए ऊपर दिए गए बटन पर क्लिक करें।",
+    "model_desc_rf": "Random Forest: कई सरल निर्णयों को मिलाकर अंतिम निर्णय लेने की विधि",
+    "model_desc_svm": "SVM: डेटा समूहों को अलग करने वाली सीमा रेखा खोजने की विधि"
 },
 "ta": {
     "title": "பாடல் வகை வகைப்பான்",
@@ -113,6 +128,7 @@ lang_dict = {
     "select_model": "மாதிரியைத் தேர்ந்தெடுக்கவும்",
     "download_rf": "⬇️ ரேண்டம் ஃபாரெஸ்ட் வகைப்பாட்டு அறிக்கை பதிவிறக்கு",
     "download_svm": "⬇️ எஸ்விஎம் வகைப்பாட்டு அறிக்கை பதிவிறக்கு",
+    "show_heatmap_mic": "MFCC ஹீட்மாப் காண்க (மைக்ரோபோன் உள்ளீடு)",
     "predicted_genre": "முன்னறிவிப்பு வகை",
     "show_heatmap": "MFCC ஹீட்மாப் காண்க",
     "accuracy_summary": "மாதிரி துல்லியத் தொகுப்பு",
@@ -124,7 +140,9 @@ lang_dict = {
     "select_file": "வகைப்படுத்த கோப்பைத் தேர்ந்தெடு",
     "choose_language": "மொழி தேர்ந்தெடு / Choose Language / 언어 선택",
     "start_info": "தொடங்க ஒரு அல்லது அதற்கு மேற்பட்ட .wav கோப்புகளை பதிவேற்றவும்.",
-    "mic_start_info": "பதிவு செய்ய ஆரம்பிக்க மேலுள்ள பொத்தானை அழுத்தவும்."
+    "mic_start_info": "பதிவு செய்ய ஆரம்பிக்க மேலுள்ள பொத்தானை அழுத்தவும்.",
+    "model_desc_rf": "Random Forest: பல எளிய முடிவுகளை இணைத்து இறுதி முடிவை எடுக்கும் முறை",
+    "model_desc_svm": "SVM: தரவு குழுக்களை பிரிக்க எல்லை வரியை கண்டுபிடிக்கும் முறை"
 },
 "zh": {
     "title": "音乐类别分类器",
@@ -132,6 +150,7 @@ lang_dict = {
     "select_model": "选择模型",
     "download_rf": "⬇️ 下载随机森林分类报告",
     "download_svm": "⬇️ 下载SVM分类报告",
+    "show_heatmap_mic": "显示MFCC热图（麦克风输入）",
     "predicted_genre": "预测的类别",
     "show_heatmap": "显示MFCC热图",
     "accuracy_summary": "模型准确度摘要",
@@ -143,7 +162,9 @@ lang_dict = {
     "select_file": "选择要分类的文件",
     "choose_language": "选择语言 / Choose Language / 언어 선택",
     "start_info": "请上传一个或多个.wav文件开始使用。",
-    "mic_start_info": "点击上方按钮开始录音。"
+    "mic_start_info": "点击上方按钮开始录音。",
+    "model_desc_rf": "随机森林：通过结合多个简单决策来做出最终决定的方法",
+    "model_desc_svm": "支持向量机：寻找分割不同数据组的边界线的方法"
 },
 "hk": {
     "title": "音樂類型分類器",
@@ -151,6 +172,7 @@ lang_dict = {
     "select_model": "選擇模型",
     "download_rf": "⬇️ 下載隨機森林分類報告",
     "download_svm": "⬇️ 下載SVM分類報告",
+    "show_heatmap_mic": "顯示MFCC熱圖（麥克風輸入）",
     "predicted_genre": "預測類別",
     "show_heatmap": "顯示MFCC熱圖",
     "accuracy_summary": "模型準確率摘要",
@@ -162,7 +184,9 @@ lang_dict = {
     "select_file": "選擇要分類的檔案",
     "choose_language": "選擇語言 / Choose Language / 언어 선택",
     "start_info": "請上載一個或多個.wav檔案開始使用。",
-    "mic_start_info": "點擊上方按鈕開始錄音。"
+    "mic_start_info": "點擊上方按鈕開始錄音。",
+    "model_desc_rf": "隨機森林：透過結合多個簡單決策來作出最終決定的方法",
+    "model_desc_svm": "支持向量機：尋找分隔不同數據組的邊界線的方法"
 },
 "ja": {
     "title": "音楽ジャンル分類器",
@@ -170,6 +194,7 @@ lang_dict = {
     "select_model": "モデルを選択",
     "download_rf": "⬇️ ランダムフォレスト分類レポートをダウンロード",
     "download_svm": "⬇️ SVM分類レポートをダウンロード",
+    "show_heatmap_mic": "MFCCヒートマップを表示（マイク入力）",
     "predicted_genre": "予測されたジャンル",
     "show_heatmap": "MFCCヒートマップを表示",
     "accuracy_summary": "モデルの精度概要",
@@ -181,7 +206,9 @@ lang_dict = {
     "select_file": "分類するファイルを選択",
     "choose_language": "言語を選択 / Choose Language / 언어 선택",
     "start_info": "開始するには1つ以上の.wavファイルをアップロードしてください。",
-    "mic_start_info": "録音を開始するには上のボタンをクリックしてください。"
+    "mic_start_info": "録音を開始するには上のボタンをクリックしてください。",
+    "model_desc_rf": "ランダムフォレスト：多数の単純な判断を組み合わせて最終決定を行う方法",
+    "model_desc_svm": "SVM：異なるデータ群を分ける境界線を見つける方法"
 },
 "fr": {
     "title": "Classificateur de genre musical",
@@ -189,6 +216,7 @@ lang_dict = {
     "select_model": "Choisir un modèle",
     "download_rf": "⬇️ Télécharger le rapport de classification Random Forest",
     "download_svm": "⬇️ Télécharger le rapport de classification SVM",
+    "show_heatmap_mic": "Afficher la carte thermique MFCC (entrée micro)",
     "predicted_genre": "Genre prédit",
     "show_heatmap": "Afficher la carte thermique MFCC",
     "accuracy_summary": "Résumé de la précision du modèle",
@@ -200,7 +228,9 @@ lang_dict = {
     "select_file": "Sélectionnez un fichier à classer",
     "choose_language": "Choisir la langue / Choose Language / 언어 선택",
     "start_info": "Veuillez télécharger un ou plusieurs fichiers .wav pour commencer.",
-    "mic_start_info": "Cliquez sur le bouton ci-dessus pour commencer l'enregistrement."
+    "mic_start_info": "Cliquez sur le bouton ci-dessus pour commencer l'enregistrement.",
+    "model_desc_rf": "Forêt Aléatoire : Une méthode qui prend la décision finale en combinant de nombreuses décisions simples",
+    "model_desc_svm": "SVM : Une méthode qui trouve la ligne de séparation pour distinguer différents groupes de données"
 },
 "it": {
     "title": "Classificatore di genere musicale",
@@ -208,6 +238,7 @@ lang_dict = {
     "select_model": "Scegli un modello",
     "download_rf": "⬇️ Scarica il rapporto di classificazione Random Forest",
     "download_svm": "⬇️ Scarica il rapporto di classificazione SVM",
+    "show_heatmap_mic": "Mostra la mappa di calore MFCC (input microfono)",
     "predicted_genre": "Genere previsto",
     "show_heatmap": "Mostra la mappa di calore MFCC",
     "accuracy_summary": "Riepilogo accuratezza modello",
@@ -219,7 +250,9 @@ lang_dict = {
     "select_file": "Seleziona un file da classificare",
     "choose_language": "Scegli la lingua / Choose Language / 언어 선택",
     "start_info": "Carica uno o più file .wav per iniziare.",
-    "mic_start_info": "Fai clic sul pulsante sopra per iniziare la registrazione."
+    "mic_start_info": "Fai clic sul pulsante sopra per iniziare la registrazione.",
+    "model_desc_rf": "Random Forest: Un metodo che prende la decisione finale combinando molte decisioni semplici",
+    "model_desc_svm": "SVM: Un metodo che trova la linea di confine per separare diversi gruppi di dati"
 },
 "ru": {
     "title": "Классификатор музыкальных жанров",
@@ -227,6 +260,7 @@ lang_dict = {
     "select_model": "Выберите модель",
     "download_rf": "⬇️ Скачать отчет классификации Random Forest",
     "download_svm": "⬇️ Скачать отчет классификации SVM",
+    "show_heatmap_mic": "Показать тепловую карту MFCC (вход с микрофона)",
     "predicted_genre": "Предсказанный жанр",
     "show_heatmap": "Показать тепловую карту MFCC",
     "accuracy_summary": "Обзор точности модели",
@@ -238,7 +272,9 @@ lang_dict = {
     "select_file": "Выберите файл для классификации",
     "choose_language": "Выберите язык / Choose Language / 언어 선택",
     "start_info": "Пожалуйста, загрузите один или несколько файлов .wav для начала.",
-    "mic_start_info": "Нажмите кнопку выше, чтобы начать запись."
+    "mic_start_info": "Нажмите кнопку выше, чтобы начать запись.",
+    "model_desc_rf": "Случайный лес: метод, который принимает окончательное решение, объединяя множество простых решений",
+    "model_desc_svm": "SVM: метод, который находит границу для разделения различных групп данных"
 },
 "es": {
     "title": "Clasificador de Géneros Musicales",
@@ -246,6 +282,7 @@ lang_dict = {
     "select_model": "Elige un modelo",
     "download_rf": "⬇️ Descargar informe de clasificación Random Forest",
     "download_svm": "⬇️ Descargar informe de clasificación SVM",
+    "show_heatmap_mic": "Mostrar mapa de calor MFCC (entrada de micrófono)",
     "predicted_genre": "Género Predicho",
     "show_heatmap": "Mostrar mapa de calor MFCC",
     "accuracy_summary": "Resumen de precisión del modelo",
@@ -257,7 +294,9 @@ lang_dict = {
     "select_file": "Selecciona un archivo para clasificar",
     "choose_language": "Elige idioma / Choose Language / 언어 선택",
     "start_info": "Por favor, sube uno o más archivos .wav para comenzar.",
-    "mic_start_info": "Haga clic en el botón de arriba para comenzar la grabación."
+    "mic_start_info": "Haga clic en el botón de arriba para comenzar la grabación.",
+    "model_desc_rf": "Bosque Aleatorio: Un método que toma la decisión final combinando muchas decisiones simples",
+    "model_desc_svm": "SVM: Un método que encuentra la línea límite para separar diferentes grupos de datos"
 },
 "ar": {
     "title": "مصنف نوع الموسيقى",
@@ -265,6 +304,7 @@ lang_dict = {
     "select_model": "اختر نموذجًا",
     "download_rf": "⬇️ تحميل تقرير تصنيف Random Forest",
     "download_svm": "⬇️ تحميل تقرير تصنيف SVM",
+    "show_heatmap_mic": "عرض خريطة الحرارة MFCC (إدخال الميكروفون)",
     "predicted_genre": "النوع المتوقع",
     "show_heatmap": "عرض خريطة الحرارة MFCC",
     "accuracy_summary": "ملخص دقة النموذج",
@@ -276,7 +316,9 @@ lang_dict = {
     "select_file": "اختر ملفًا للتصنيف",
     "choose_language": "اختر اللغة / Choose Language / 언어 선택",
     "start_info": "يرجى تحميل ملف واحد أو أكثر بصيغة .wav للبدء.",
-    "mic_start_info": "انقر فوق الزر أعلاه لبدء التسجيل."
+    "mic_start_info": "انقر فوق الزر أعلاه لبدء التسجيل.",
+    "model_desc_rf": "الغابة العشوائية: طريقة تتخذ القرار النهائي عن طريق دمج العديد من القرارات البسيطة",
+    "model_desc_svm": "SVM: طريقة تجد خط الحدود لفصل مجموعات البيانات المختلفة"
 },
 "pt": {
     "title": "Classificador de Gêneros Musicais",
@@ -284,6 +326,7 @@ lang_dict = {
     "select_model": "Escolha um modelo",
     "download_rf": "⬇️ Baixar relatório de classificação Random Forest",
     "download_svm": "⬇️ Baixar relatório de classificação SVM",
+    "show_heatmap_mic": "Mostrar mapa de calor MFCC (entrada do microfone)",
     "predicted_genre": "Gênero Previsto",
     "show_heatmap": "Mostrar mapa de calor MFCC",
     "accuracy_summary": "Resumo de precisão do modelo",
@@ -295,7 +338,9 @@ lang_dict = {
     "select_file": "Selecione um arquivo para classificar",
     "choose_language": "Escolha o idioma / Choose Language / 언어 선택",
     "start_info": "Por favor, faça upload de um ou mais arquivos .wav para começar.",
-    "mic_start_info": "Clique no botão acima para começar a gravação."
+    "mic_start_info": "Clique no botão acima para começar a gravação.",
+    "model_desc_rf": "Random Forest: Um método que toma a decisão final combinando muitas decisões simples",
+    "model_desc_svm": "SVM: Um método que encontra a linha de fronteira para separar diferentes grupos de dados"
 },
 "vi": {
     "title": "Bộ Phân Loại Thể Loại Nhạc",
@@ -303,6 +348,7 @@ lang_dict = {
     "select_model": "Chọn mô hình",
     "download_rf": "⬇️ Tải xuống báo cáo phân loại Random Forest",
     "download_svm": "⬇️ Tải xuống báo cáo phân loại SVM",
+    "show_heatmap_mic": "Hiển thị bản đồ nhiệt MFCC (đầu vào micrô)",
     "predicted_genre": "Thể loại dự đoán",
     "show_heatmap": "Hiển thị bản đồ nhiệt MFCC",
     "accuracy_summary": "Tóm tắt độ chính xác mô hình",
@@ -314,7 +360,9 @@ lang_dict = {
     "select_file": "Chọn tệp để phân loại",
     "choose_language": "Chọn ngôn ngữ / Choose Language / 언어 선택",
     "start_info": "Vui lòng tải lên một hoặc nhiều tệp .wav để bắt đầu.",
-    "mic_start_info": "Nhấp vào nút ở trên để bắt đầu ghi âm."
+    "mic_start_info": "Nhấp vào nút ở trên để bắt đầu ghi âm.",
+    "model_desc_rf": "Rừng ngẫu nhiên: Phương pháp đưa ra quyết định cuối cùng bằng cách kết hợp nhiều quyết định đơn giản",
+    "model_desc_svm": "SVM: Phương pháp tìm đường biên để phân tách các nhóm dữ liệu khác nhau"
 },
 "tr": {
     "title": "Müzik Türü Sınıflandırıcı",
@@ -322,9 +370,12 @@ lang_dict = {
     "select_model": "Bir model seçin",
     "download_rf": "⬇️ Random Forest Sınıflandırma Raporunu İndir",
     "download_svm": "⬇️ SVM Sınıflandırma Raporunu İndir",
+    "show_heatmap_mic": "MFCC Isı Haritasını Göster (Mikrofon Girişi)",
     "predicted_genre": "Tahmin Edilen Tür",
     "show_heatmap": "MFCC Isı Haritasını",
-    "mic_start_info": "Kayda başlamak için yukarıdaki düğmeye tıklayın."
+    "mic_start_info": "Kayda başlamak için yukarıdaki düğmeye tıklayın.",
+    "model_desc_rf": "Random Forest: Birçok basit kararı birleştirerek nihai kararı veren yöntem",
+    "model_desc_svm": "SVM: Farklı veri gruplarını ayıran sınır çizgisini bulan yöntem"
     },  # 각 언어별 딕셔너리 닫힘
 }  # lang_dict 전체 닫는 중괄호
 
@@ -345,6 +396,12 @@ model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
 model = joblib.load(model_file)  # 모델 불러오기 (Load model)
 scaler = joblib.load("scaler.pkl")  # 스케일러 불러오기 (Load scaler)
 label_encoder = joblib.load("label_encoder.pkl")  # 레이블 인코더 불러오기 (Load label encoder)
+
+# 모델 설명 안내문구 표시 (Show model description)
+if model_option == "Random Forest":
+    st.info(texts["model_desc_rf"])
+elif model_option == "SVM":
+    st.info(texts["model_desc_svm"])
 
 # 평가 리포트 CSV 경로 (CSV paths for evaluation reports)
 rf_report_path = "rf_classification_report.csv"
@@ -533,14 +590,15 @@ if ctx:
                     classes = label_encoder.inverse_transform(model.classes_)
                     st.bar_chart(dict(zip(classes, proba)))
                 
-                # MFCC 히트맵 표시 (Show MFCC heatmap)
-                if st.checkbox("Show MFCC Heatmap (Mic Input)"):
+                # 여기에 체크박스 + 히트맵 시각화 코드 넣기 (Insert checkbox + heatmap visualization code here)
+                if st.checkbox(texts["show_heatmap_mic"]):
                     fig, ax = plt.subplots(figsize=(8, 4))
                     sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
                     ax.set_title("MFCC Features (Mic Input)")
                     ax.set_xlabel("Time")
                     ax.set_ylabel("MFCC Coefficients")
                     st.pyplot(fig)
+                    
         except Exception as e:
             st.error(f"Error during microphone processing: {e}")
     else:
