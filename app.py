@@ -397,7 +397,7 @@ lang_dict = {
 }
 
 # --- 언어 선택 UI (Language selection UI) ---
-language = st.sidebar.selectbox(
+language = st.selectbox(
     "Choose Language / 언어 선택",
     options=list(lang_dict.keys()),
     index=0
