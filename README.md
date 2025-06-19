@@ -1,6 +1,9 @@
 # 🎧 Music Genre Classification with GTZAN Dataset
 
-GTZAN-based audio genre classification using MFCC and Random Forest
+This project classifies music genres using MFCC (Mel-frequency cepstral coefficients) extracted from the GTZAN dataset.  
+It uses Python libraries like `librosa`, `scikit-learn`, and `matplotlib` to extract features, train a model, and visualize performance.
+
+🔗 [Try the app on Streamlit!](https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/)
 
 ---
 
@@ -26,7 +29,7 @@ GTZAN-based audio genre classification using MFCC and Random Forest
 | Accuracy       | ~64%     |
 | Best Genres    | Classical, Metal, Jazz |
 
-- Classical and Metal genres were predicted with high precision and recall
+- Classical and Metal genres were predicted with high precision and recall  
 - Rock and Country showed more frequent confusion with other genres
 
 ---
@@ -35,7 +38,7 @@ GTZAN-based audio genre classification using MFCC and Random Forest
 
 - Python 3.x  
 - Google Colab  
-- `librosa`, `pandas`, `numpy`, `matplotlib`, `seaborn`, `scikit-learn`
+- `librosa`, `pandas`, `numpy`, `matplotlib`, `seaborn`, `scikit-learn`, `streamlit`
 
 ---
 
@@ -46,6 +49,8 @@ Here’s how the project files are organized:
 music-genre-classification-gtzan/
 │
 ├── GTZAN_MFCC_Classification.ipynb ← the main Colab notebook
+├── app.py ← Streamlit web app code
+├── model.pkl ← saved Random Forest model
 ├── requirements.txt ← list of Python libraries used
 ├── README.md ← this file
 └── images/ ← (optional) plots like confusion matrix
@@ -55,10 +60,11 @@ music-genre-classification-gtzan/
 
 ## 🚀 What I Want to Do Next
 
-- Try other features like Chroma or Spectral Contrast
-- Test different models like SVM or deep learning
-- Turn this into a small app using Streamlit so anyone can try genre prediction
-- Use 3-second clips to make the dataset bigger
+- Try other features like Chroma or Spectral Contrast  
+- Test different models like SVM or deep learning  
+- Expand the dataset using 3-second segments  
+- Add visual outputs (e.g., probabilities per genre)  
+- Improve Streamlit app design and user experience  
 
 ---
 
