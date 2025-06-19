@@ -62,6 +62,13 @@ if uploaded_file is not None:
         prediction = model.predict(features)
         st.success(f"🎶 **Predicted Genre:** `{prediction[0].capitalize()}`")
 
+        with st.expander("📊 Model Accuracy Summary"):
+    st.markdown("""
+    - **Random Forest Accuracy:** ~64%  
+    - **SVM Accuracy:** (not available yet)  
+    - Best performing genres: 🎼 `Classical`, 🤘 `Metal`, 🎷 `Jazz`
+    """)
+
         # MFCC 히트맵 보기
         if st.checkbox("Show MFCC Heatmap"):
             fig, ax = plt.subplots(figsize=(8, 4))
