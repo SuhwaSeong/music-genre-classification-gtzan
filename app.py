@@ -465,10 +465,8 @@ class AudioProcessor(AudioProcessorBase):
 
 ctx = webrtc_streamer(
     key="mic",
-    mode="sendonly",
-    audio_receiver_size=1024,
-    client_settings={"media_stream_constraints": {"audio": True, "video": False}},
-    processor_factory=AudioProcessor,
+    mode=WebRtcMode.SENDONLY,
+    audio_processor_factory=AudioProcessor,  # 여기서 processor_factory -> audio_processor_factory 로 수정
 )
 
 if ctx and ctx.state.playing:
