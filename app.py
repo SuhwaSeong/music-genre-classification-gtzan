@@ -3,8 +3,11 @@ import librosa
 import numpy as np
 import joblib
 
-# 해당 .pkl 파일을 미리 저장해두었다고 값
-model = joblib.load("model.pkl")
+# 🔍 모델 선택
+model_option = st.radio("Choose a model", ("Random Forest", "SVM"))
+
+model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
+model = joblib.load(model_file)
 
 # 해당 복수문의 만약 예측 표시에 이용할 MFCC 시각화용 figure
 import matplotlib.pyplot as plt
