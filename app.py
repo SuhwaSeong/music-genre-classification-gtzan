@@ -10,14 +10,7 @@ st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
 # 모델 선택
 model_option = st.radio("Choose a model", ("Random Forest", "SVM"))
-
-# 모델 및 전처리기 파일명
-if model_option == "Random Forest":
-    model_file = "model.pkl"
-else:
-    model_file = "svm_model.pkl"
-
-# 모델 및 scaler, label encoder 불러오기
+model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
 model = joblib.load(model_file)
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
@@ -25,7 +18,7 @@ label_encoder = joblib.load("label_encoder.pkl")
 # 앱 헤더
 st.markdown("""
 <h1 style='text-align: center; color: #FF4B4B;'>🎵 Music Genre Classifier</h1>
-<p style='text-align: center;'>Upload a <b>.wav</b> file and I'll try to guess the genre using machine learning!</p>
+<p style='text-align: center;'>Upload one or more <b>.wav</b> files and select which one to classify!</p>
 <hr>
 """, unsafe_allow_html=True)
 
@@ -55,33 +48,38 @@ else:
     Accuracy: ~61%
     """)
 
-# 파일 업로드
-uploaded_file = st.file_uploader("🎵 Choose a WAV file", type=["wav"])
+# 여러 파일 업로드
+uploaded_files = st.file_uploader("🎵 Choose WAV files", type=["wav"], accept_multiple_files=True)
 
-if uploaded_file is not None:
+if uploaded_files:
+    filenames = [file.name for file in uploaded_files]
+    selected_file = st.selectbox("Select a file to classify", filenames)
+
+    # 선택한 파일 객체 찾기
+    file_obj = next(file for file in uploaded_files if file.name == selected_file)
+
     try:
         # 오디오 재생
-        audio_bytes = uploaded_file.read()
+        audio_bytes = file_obj.read()
         st.audio(audio_bytes, format='audio/wav')
-        uploaded_file.seek(0)  # 파일 포인터 초기화
+        file_obj.seek(0)  # 파일 포인터 초기화
 
         # MFCC 특징 추출
-        y, sr = librosa.load(uploaded_file, duration=30)
+        y, sr = librosa.load(file_obj, duration=30)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
 
-        # 스케일링 적용
+        # 스케일링
         features_scaled = scaler.transform(features)
 
         # 예측 수행
         prediction_encoded = model.predict(features_scaled)
         prediction = label_encoder.inverse_transform(prediction_encoded)
-
         st.success(f"🎶 **Predicted Genre:** `{prediction[0].capitalize()}`")
 
-        # 예측 확률 보기 (Random Forest 및 probability=True SVM 지원)
+        # 예측 확률 보기 (가능할 경우)
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
             classes_encoded = model.classes_
@@ -109,7 +107,7 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Something went wrong while processing the audio file.\n\nError: {e}")
-
 else:
-    st.info("Please upload a .wav file to get started.")
+    st.info("Please upload one or more .wav files to get started.")
+
 
