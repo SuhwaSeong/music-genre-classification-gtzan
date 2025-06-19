@@ -20,6 +20,15 @@ st.markdown("""
 <hr>
 """, unsafe_allow_html=True)
 
+# 🎵 샘플 오디오 다운로드 버튼
+with open("sample.wav", "rb") as audio_file:
+    st.download_button(
+        label="⬇️ Download Sample Audio (.wav)",
+        data=audio_file,
+        file_name="sample.wav",
+        mime="audio/wav"
+    )
+
 # 사이드바 정보 설명
 st.sidebar.header("📌 About This App")
 if model_option == "Random Forest":
