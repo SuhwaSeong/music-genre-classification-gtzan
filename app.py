@@ -108,7 +108,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Metoda znajdująca linię graniczną rozdzielającą różne grupy danych"
     },
     "hi": {
-        "language_name": "हिन्दी (Hindi-인도-힌두어)",        
+        "language_name": "हिन्दी (Hindi-인도-힌디어)",        
         "title": "संगीत शैली वर्गीकर्ता",
         "upload": ".wav फ़ाइल अपलोड करें",
         "select_model": "मॉडल चुनें",
@@ -300,7 +300,7 @@ lang_dict = {
         "model_desc_svm": "SVM: метод, который находит границу для разделения различных групп данных"
     },
     "es": {
-        "language_name": "Español (Spanish-에스파냐어)",
+        "language_name": "Español (Spanish-스페인어)",
         "title": "Clasificador de Géneros Musicales",
         "upload": "Sube uno o más archivos .wav",
         "select_model": "Elige un modelo",
