@@ -12,7 +12,32 @@ from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
+     "ko": {
+        "language_name": "Korean (한국어)",
+        "title": "음악 장르 분류기",
+        "upload": ".wav 파일을 업로드하세요",
+        "select_model": "모델 선택",
+        "download_rf": "⬇️ 랜덤 포레스트 분류 리포트 다운로드",
+        "download_svm": "⬇️ SVM 분류 리포트 다운로드",
+        "show_heatmap_mic": "MFCC 히트맵 보기 (마이크 입력)",
+        "mfcc_heatmap_title_mic": "MFCC 특징 (마이크 입력)",
+        "predicted_genre": "예측된 장르",
+        "show_heatmap": "MFCC 히트맵 보기",
+        "accuracy_summary": "모델 정확도 요약",
+        "accuracy_rf": "랜덤 포레스트 정확도",
+        "accuracy_svm": "SVM 정확도",
+        "best_genres": "가장 높은 성능을 보이는 장르",
+        "about_app": "앱 정보",
+        "model_performance": "모델 성능 지표",
+        "select_file": "분류할 파일 선택",
+        "choose_language": "언어 선택 / Choose Language",
+        "start_info": "하나 이상의 .wav 파일을 업로드 해주세요.",
+        "mic_start_info": "녹음을 시작하려면 위 버튼을 클릭하세요.",
+        "model_desc_rf": "랜덤 포레스트: 여러 판단 기준을 모아 최종 결정을 내리는 방법",
+        "model_desc_svm": "SVM: 데이터 경계선을 찾아 구분하는 방법"
+    },
     "en": {
+        "language_name": "English (영어)",
         "title": "Music Genre Classifier",
         "upload": "Upload one or more .wav files",
         "select_model": "Choose a model",
@@ -36,6 +61,7 @@ lang_dict = {
         "model_desc_svm": "SVM: A method that finds the boundary line to separate different groups of data"
     },
     "de": {
+        "language_name": "Deutsch (German-독일어)",
         "title": "Musikgenre-Klassifikator",
         "upload": "Laden Sie eine oder mehrere .wav-Dateien hoch",
         "select_model": "Wählen Sie ein Modell",
@@ -58,30 +84,8 @@ lang_dict = {
         "model_desc_rf": "Random Forest: Eine Methode, die eine endgültige Entscheidung trifft, indem sie viele einfache Entscheidungen kombiniert",
         "model_desc_svm": "SVM: Eine Methode, die die Grenze findet, um verschiedene Datenmengen zu trennen"
     },
-    "ko": {
-        "title": "음악 장르 분류기",
-        "upload": ".wav 파일을 업로드하세요",
-        "select_model": "모델 선택",
-        "download_rf": "⬇️ 랜덤 포레스트 분류 리포트 다운로드",
-        "download_svm": "⬇️ SVM 분류 리포트 다운로드",
-        "show_heatmap_mic": "MFCC 히트맵 보기 (마이크 입력)",
-        "mfcc_heatmap_title_mic": "MFCC 특징 (마이크 입력)",
-        "predicted_genre": "예측된 장르",
-        "show_heatmap": "MFCC 히트맵 보기",
-        "accuracy_summary": "모델 정확도 요약",
-        "accuracy_rf": "랜덤 포레스트 정확도",
-        "accuracy_svm": "SVM 정확도",
-        "best_genres": "성능이 좋은 장르",
-        "about_app": "앱 정보",
-        "model_performance": "모델 성능 지표",
-        "select_file": "분류할 파일 선택",
-        "choose_language": "언어 선택 / Choose Language",
-        "start_info": "하나 이상의 .wav 파일을 업로드 해주세요.",
-        "mic_start_info": "녹음을 시작하려면 위 버튼을 클릭하세요.",
-        "model_desc_rf": "랜덤 포레스트: 여러 판단 기준을 모아 최종 결정을 내리는 방법",
-        "model_desc_svm": "SVM: 데이터 경계선을 찾아 구분하는 방법"
-    },
     "pl": {
+        "language_name": "Polski (Polish-폴란드어)",
         "title": "Klasyfikator gatunków muzycznych",
         "upload": "Prześlij jeden lub więcej plików .wav",
         "select_model": "Wybierz model",
@@ -105,6 +109,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Metoda znajdująca linię graniczną rozdzielającą różne grupy danych"
     },
     "hi": {
+        "language_name": "हिन्दी (Hindi-인도-힌두어)",        
         "title": "संगीत शैली वर्गीकर्ता",
         "upload": ".wav फ़ाइल अपलोड करें",
         "select_model": "मॉडल चुनें",
@@ -128,6 +133,7 @@ lang_dict = {
         "model_desc_svm": "SVM: डेटा समूहों को अलग करने वाली सीमा रेखा खोजने की विधि"
     },
     "ta": {
+        "language_name": "தமிழ் (Tamil-인도-타말어)",
         "title": "பாடல் வகை வகைப்பான்",
         "upload": ".wav கோப்புகளை பதிவேற்றவும்",
         "select_model": "மாதிரியைத் தேர்ந்தெடுக்கவும்",
@@ -151,6 +157,7 @@ lang_dict = {
         "model_desc_svm": "SVM: தரவு குழுக்களை பிரிக்க எல்லை வரியை கண்டுபிடிக்கும் முறை"
     },
     "zh": {
+        "language_name": "中文 (China-중국어)",        
         "title": "音乐类别分类器",
         "upload": "上传一个或多个.wav文件",
         "select_model": "选择模型",
@@ -174,6 +181,7 @@ lang_dict = {
         "model_desc_svm": "支持向量机：寻找分割不同数据组的边界线的方法"
     },
     "hk": {
+        "language_name": "繁體中文-香港粵語 (Hong Kong Cantonese-홍콩어)",
         "title": "音樂類型分類器",
         "upload": "上載一個或多個.wav檔案",
         "select_model": "選擇模型",
@@ -197,6 +205,7 @@ lang_dict = {
         "model_desc_svm": "支持向量機：尋找分隔不同數據組的邊界線的方法"
     },
     "ja": {
+        "language_name": "日本語 (Japanese-일본어)",
         "title": "音楽ジャンル分類器",
         "upload": "1つ以上の.wavファイルをアップロードしてください",
         "select_model": "モデルを選択",
@@ -220,6 +229,7 @@ lang_dict = {
         "model_desc_svm": "SVM：異なるデータ群を分ける境界線を見つける方法"
     },
     "fr": {
+        "language_name": "Français (Franch-프랑스어)",
         "title": "Classificateur de genre musical",
         "upload": "Téléchargez un ou plusieurs fichiers .wav",
         "select_model": "Choisir un modèle",
@@ -243,6 +253,7 @@ lang_dict = {
         "model_desc_svm": "SVM : Une méthode qui trouve la ligne de séparation pour distinguer différents groupes de données"
     },
     "it": {
+        "language_name": "Italiano (Italian-이태리어)",
         "title": "Classificatore di genere musicale",
         "upload": "Carica uno o più file .wav",
         "select_model": "Scegli un modello",
@@ -266,6 +277,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Un metodo che trova la linea di confine per separare diversi gruppi di dati"
     },
     "ru": {
+        "language_name": "Русский (Russian-러시아어)",
         "title": "Классификатор музыкальных жанров",
         "upload": "Загрузите один или несколько файлов .wav",
         "select_model": "Выберите модель",
@@ -289,6 +301,7 @@ lang_dict = {
         "model_desc_svm": "SVM: метод, который находит границу для разделения различных групп данных"
     },
     "es": {
+        "language_name": "Español (Spanish-에스파냐어)",
         "title": "Clasificador de Géneros Musicales",
         "upload": "Sube uno o más archivos .wav",
         "select_model": "Elige un modelo",
@@ -312,6 +325,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Un método que encuentra la línea límite para separar diferentes grupos de datos"
     },
     "ar": {
+        "language_name": "العربية (Arabic-아랍어)",
         "title": "مصنف نوع الموسيقى",
         "upload": "قم بتحميل ملف أو أكثر بصيغة .wav",
         "select_model": "اختر نموذجًا",
@@ -335,6 +349,7 @@ lang_dict = {
         "model_desc_svm": "SVM: طريقة تجد خط الحدود لفصل مجموعات البيانات المختلفة"
     },
     "pt": {
+        "language_name": "Português (Portuguese-포르투갈어)",
         "title": "Classificador de Gêneros Musicais",
         "upload": "Faça upload de um ou mais arquivos .wav",
         "select_model": "Escolha um modelo",
@@ -358,6 +373,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Um método que encontra a linha de fronteira para separar diferentes grupos de dados"
     },
     "vi": {
+        "language_name": "Tiếng Việt (Vietnamese-베트남어)",
         "title": "Bộ Phân Loại Thể Loại Nhạc",
         "upload": "Tải lên một hoặc nhiều file .wav",
         "select_model": "Chọn mô hình",
@@ -381,6 +397,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Phương pháp tìm đường biên để phân tách các nhóm dữ liệu khác nhau"
     },
     "tr": {
+        "language_name": "Türkçe (Turkish-튀르키에어)",
         "title": "Müzik Türü Sınıflandırıcı",
         "upload": "Bir veya daha fazla .wav dosyası yükleyin",
         "select_model": "Bir model seçin",
@@ -396,13 +413,24 @@ lang_dict = {
     }
 }
 
-# --- 언어 선택 UI (Language selection UI) ---
-language = st.selectbox(
+# 언어 이름 리스트 생성 (Create list of language names)
+language_names = [lang_dict[code]["language_name"] for code in lang_dict.keys()]
+
+# 기본 언어 인덱스 (Default language index, e.g. English)
+default_index = language_names.index("English (영어)")
+
+# 선택된 언어 이름 받기 (Get selected language name from sidebar)
+selected_language_name = st.sidebar.selectbox(
     "Choose Language / 언어 선택",
-    options=list(lang_dict.keys()),
-    index=0
+    options=language_names,
+    index=default_index
 )
-texts = lang_dict[language]
+
+# 언어 이름 → 코드 역매핑 (Map selected language name back to language code)
+language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
+
+# texts 할당 (Assign texts dictionary for selected language)
+texts = lang_dict[language_code]
 
 # 페이지 설정 (Page setup)
 st.set_page_config(page_title=texts["title"], layout="centered")
