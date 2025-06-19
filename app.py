@@ -305,8 +305,8 @@ lang_dict = {
         "download_svm": "⬇️ SVM Sınıflandırma Raporunu İndir",
         "predicted_genre": "Tahmin Edilen Tür",
         "show_heatmap": "MFCC Isı Haritasını"
-
-}
+    },  # 각 언어별 딕셔너리 닫힘
+}  # lang_dict 전체 닫는 중괄호
 
 # --- 언어 선택 UI ---
 language = st.sidebar.selectbox(
