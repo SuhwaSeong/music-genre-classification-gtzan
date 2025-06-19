@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd  # 추가
 
 # 페이지 설정
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
@@ -14,6 +15,20 @@ model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
 model = joblib.load(model_file)
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
+
+# 평가 리포트 CSV 경로
+rf_report_path = "rf_classification_report.csv"
+svm_report_path = "svm_classification_report.csv"
+
+# 선택한 모델에 따라 평가 리포트 불러오기
+if model_option == "Random Forest":
+    report_df = pd.read_csv(rf_report_path, index_col=0)
+else:
+    report_df = pd.read_csv(svm_report_path, index_col=0)
+
+# 주요 지표만 선택
+metrics = ["precision", "recall", "f1-score"]
+report_metrics = report_df.loc[:, metrics]
 
 # 앱 헤더
 st.markdown("""
@@ -31,7 +46,7 @@ with open("sample.wav", "rb") as audio_file:
         mime="audio/wav"
     )
 
-# 사이드바 정보
+# 사이드바 정보 및 성능 리포트 시각화
 st.sidebar.header("📌 About This App")
 if model_option == "Random Forest":
     st.sidebar.markdown("""
@@ -47,6 +62,10 @@ else:
     Features: 13 MFCCs (mean + std)  
     Accuracy: ~61%
     """)
+
+st.sidebar.header("📊 Model Performance Metrics")
+st.sidebar.dataframe(report_metrics)
+st.sidebar.bar_chart(report_metrics)
 
 # 여러 파일 업로드
 uploaded_files = st.file_uploader("🎵 Choose WAV files", type=["wav"], accept_multiple_files=True)
@@ -109,5 +128,6 @@ if uploaded_files:
         st.error(f"Something went wrong while processing the audio file.\n\nError: {e}")
 else:
     st.info("Please upload one or more .wav files to get started.")
+
 
 
