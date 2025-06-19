@@ -129,5 +129,20 @@ if uploaded_files:
 else:
     st.info("Please upload one or more .wav files to get started.")
 
+import base64
+
+# RF 리포트 다운로드 버튼 (CSV 파일)
+with open("rf_classification_report.csv", "rb") as rf_file:
+    rf_data = rf_file.read()
+    rf_b64 = base64.b64encode(rf_data).decode('utf-8')
+    href_rf = f'<a href="data:file/csv;base64,{rf_b64}" download="rf_classification_report.csv">⬇️ Download Random Forest Classification Report</a>'
+    st.markdown(href_rf, unsafe_allow_html=True)
+
+# SVM 리포트 다운로드 버튼 (CSV 파일)
+with open("svm_classification_report.csv", "rb") as svm_file:
+    svm_data = svm_file.read()
+    svm_b64 = base64.b64encode(svm_data).decode('utf-8')
+    href_svm = f'<a href="data:file/csv;base64,{svm_b64}" download="svm_classification_report.csv">⬇️ Download SVM Classification Report</a>'
+    st.markdown(href_svm, unsafe_allow_html=True)
 
 
