@@ -304,7 +304,7 @@ lang_dict = {
         "download_rf": "⬇️ Random Forest Sınıflandırma Raporunu İndir",
         "download_svm": "⬇️ SVM Sınıflandırma Raporunu İndir",
         "predicted_genre": "Tahmin Edilen Tür",
-        "show_heatmap": "MFCC Isı Haritasını
+        "show_heatmap": "MFCC Isı Haritasını"
 
 }
 
