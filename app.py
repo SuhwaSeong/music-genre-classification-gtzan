@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import base64
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 
 # --- 다국어 딕셔너리 ---
 lang_dict = {
