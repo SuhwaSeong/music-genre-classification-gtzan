@@ -577,11 +577,11 @@ else:
     st.info(texts["start_info"])
 
 # --- 실시간 마이크 녹음 기능 (Real-Time Mic Recording) ---
-from streamlit_audio_recorder import audio_recorder
+#from streamlit_audio_recorder import audio_recorder
 
 st.markdown("## 🎤 Real-Time Mic Recording")
 
-audio_bytes = audio_recorder()
+#audio_bytes = audio_recorder()
 
 if audio_bytes:
     st.audio(audio_bytes, format="audio/wav")
