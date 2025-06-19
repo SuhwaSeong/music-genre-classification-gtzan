@@ -396,7 +396,7 @@ lang_dict = {
         "model_desc_svm": "SVM: Phương pháp tìm đường biên để phân tách các nhóm dữ liệu khác nhau"
     },
     "tr": {
-        "language_name": "Türkçe (Turkish-튀르키에어)",
+        "language_name": "Türkçe (Turkish-튀르키예어)",
         "title": "Müzik Türü Sınıflandırıcı",
         "upload": "Bir veya daha fazla .wav dosyası yükleyin",
         "select_model": "Bir model seçin",
@@ -406,10 +406,19 @@ lang_dict = {
         "mfcc_heatmap_title_mic": "MFCC Özellikleri (Mikrofon Girişi)",
         "predicted_genre": "Tahmin Edilen Tür",
         "show_heatmap": "MFCC Isı Haritasını",
+        "accuracy_summary": "Model doğruluk özeti",
+        "accuracy_rf": "Random Forest doğruluğu",
+        "accuracy_svm": "SVM doğruluğu",
+        "best_genres": "En iyi performans gösteren türler",
+        "about_app": "Bu uygulama hakkında",
+        "model_performance": "Model performans ölçütleri",
+        "select_file": "Sınıflandırmak için bir dosya seçin",
+        "choose_language": "Dil seçin / Choose Language / 언어 선택",
+        "start_info": "Başlamak için bir veya daha fazla .wav dosyası yükleyin.",
         "mic_start_info": "Kayda başlamak için yukarıdaki düğmeye tıklayın.",
         "model_desc_rf": "Random Forest: Birçok basit kararı birleştirerek nihai kararı veren yöntem",
         "model_desc_svm": "SVM: Farklı veri gruplarını ayıran sınır çizgisini bulan yöntem"
-    }
+    },
 }
 
 # 언어 이름 리스트 생성 (Create list of language names)
@@ -576,50 +585,55 @@ if uploaded_files:
 else:
     st.info(texts["start_info"])
 
-# --- 실시간 마이크 녹음 기능 제거됨 (Streamlit Cloud 호환 안됨) ---
+# --- 실시간 마이크 녹음 기능 (조건부 분기) ---
 st.markdown("## 🎤 Real-Time Mic Recording")
-st.info("🔇 Real-time mic recording is not supported in this version. Please upload a .wav file instead.")
 
-# audio_bytes = audio_recorder() 등 삭제됨
-# audio_bytes 사용도 삭제됨
+# Streamlit Cloud에서는 secrets.toml 미지원 → 로컬에서만 활성화
+if st.secrets.get("IS_LOCAL", False):
+    try:
+        from streamlit_audio_recorder import audio_recorder
 
-# 🔽 기존 코드는 주석 처리 (원할 때 다시 살릴 수 있도록)
-# from streamlit_audio_recorder import audio_recorder
-# audio_bytes = audio_recorder()
+        audio_bytes = audio_recorder()
 
-# if audio_bytes:
-#     st.audio(audio_bytes, format="audio/wav")
-#     try:
-#         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-#             tmpfile.write(audio_bytes)
-#             tmpfile_path = tmpfile.name
+        if audio_bytes:
+            st.audio(audio_bytes, format="audio/wav")
 
-#         y, sr = librosa.load(tmpfile_path)
-#         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
-#         mfcc_mean = np.mean(mfcc, axis=1)
-#         mfcc_std = np.std(mfcc, axis=1)
-#         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
-#         features_scaled = scaler.transform(features)
+            # 오디오 데이터를 임시 파일로 저장
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
+                tmpfile.write(audio_bytes)
+                tmpfile_path = tmpfile.name
 
-#         prediction_encoded = model.predict(features_scaled)
-#         prediction = label_encoder.inverse_transform(prediction_encoded)[0]
-#         st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
+            # MFCC 특징 추출
+            y, sr = librosa.load(tmpfile_path)
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
+            mfcc_mean = np.mean(mfcc, axis=1)
+            mfcc_std = np.std(mfcc, axis=1)
+            features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
+            features_scaled = scaler.transform(features)
 
-#         if hasattr(model, "predict_proba"):
-#             proba = model.predict_proba(features_scaled)[0]
-#             classes = label_encoder.inverse_transform(model.classes_)
-#             proba_dict = dict(zip(classes, proba))
-#             st.bar_chart(proba_dict)
+            # 예측 수행
+            prediction_encoded = model.predict(features_scaled)
+            prediction = label_encoder.inverse_transform(prediction_encoded)[0]
+            st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
 
-#         if st.checkbox(texts["show_heatmap_mic"]):
-#             fig, ax = plt.subplots(figsize=(8, 4))
-#             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-#             ax.set_title(texts["mfcc_heatmap_title_mic"])
-#             ax.set_xlabel("Time")
-#             ax.set_ylabel("MFCC Coefficients")
-#             st.pyplot(fig)
+            # 예측 확률 시각화
+            if hasattr(model, "predict_proba"):
+                proba = model.predict_proba(features_scaled)[0]
+                classes = label_encoder.inverse_transform(model.classes_)
+                proba_dict = dict(zip(classes, proba))
+                st.bar_chart(proba_dict)
 
-#     except Exception as e:
-#         st.error(f"마이크 오디오 처리 중 오류 발생: {e}")
-# else:
-#     st.info(texts["mic_start_info"])
+            # MFCC 히트맵
+            if st.checkbox(texts["show_heatmap_mic"]):
+                fig, ax = plt.subplots(figsize=(8, 4))
+                sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
+                ax.set_title(texts["mfcc_heatmap_title_mic"])
+                ax.set_xlabel("Time")
+                ax.set_ylabel("MFCC Coefficients")
+                st.pyplot(fig)
+        else:
+            st.info(texts["mic_start_info"])
+    except Exception as e:
+        st.error(f"⚠️ Mic processing error: {e}")
+else:
+    st.info("🔇 Real-time mic recording is not supported in this version. Please upload a .wav file instead.")
