@@ -578,82 +578,51 @@ else:
     st.info(texts["start_info"])
 
 # --- 실시간 마이크 녹음 기능 (Real-Time Mic Recording) ---
+from streamlit_audio_recorder import audio_recorder
 
 st.markdown("## 🎤 Real-Time Mic Recording")
 
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        super().__init__()
-        self.recorded_frames = []  # 녹음된 프레임 저장 (Store recorded frames)
+audio_bytes = audio_recorder()
 
-    def recv(self, frame):
-        self.recorded_frames.append(frame.to_ndarray())  # 프레임 받아서 저장 (Append received frame)
-        return frame  # 프레임 그대로 반환 (Return frame as is)
+if audio_bytes:
+    st.audio(audio_bytes, format="audio/wav")
 
-    def save_recording(self, filename="recorded_audio.wav", samplerate=16000):
-        audio = np.concatenate(self.recorded_frames, axis=0)  # 녹음된 프레임 합치기 (Concatenate frames)
-        sf.write(filename, audio, samplerate)  # wav 파일로 저장 (Save as wav file)
-        return filename
+    try:
+        # 오디오 데이터를 임시 파일로 저장 (Save audio data to a temporary file)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
+            tmpfile.write(audio_bytes)
+            tmpfile_path = tmpfile.name
 
-    def get_audio_data(self):
-        return np.concatenate(self.recorded_frames, axis=0)  # 녹음된 오디오 numpy 배열 반환 (Return recorded audio as numpy array)
+        # librosa로 오디오 로드 및 MFCC 추출 (Load audio with librosa and extract MFCC features)
+        y, sr = librosa.load(tmpfile_path)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
+        mfcc_mean = np.mean(mfcc, axis=1)  # MFCC 평균값 (mean values)
+        mfcc_std = np.std(mfcc, axis=1)    # MFCC 표준편차 (standard deviation)
+        features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
+        features_scaled = scaler.transform(features)  # 특징 스케일링 (Scale features)
 
-ctx = webrtc_streamer(
-    key="mic",
-    mode=WebRtcMode.SENDONLY,
-    audio_processor_factory=AudioProcessor,  # 오디오 프로세서 지정 (Assign audio processor)
-)
+        # 모델 예측 (Predict with the model)
+        prediction_encoded = model.predict(features_scaled)
+        prediction = label_encoder.inverse_transform(prediction_encoded)[0]
+        st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
 
-if ctx:
-    if ctx.state.playing:
-        st.info("🎙 Recording... Click STOP when done.")  # 녹음 중 안내 (Recording info)
-    elif not ctx.state.playing and hasattr(ctx, "processor") and ctx.processor:
-        try:
-            st.success("Recording complete! Analyzing...")  # 녹음 완료 안내 (Recording complete info)
+        # 예측 확률 시각화 (Visualize prediction probabilities)
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(features_scaled)[0]
+            classes = label_encoder.inverse_transform(model.classes_)
+            proba_dict = dict(zip(classes, proba))
+            st.bar_chart(proba_dict)
 
-            # 녹음된 오디오 numpy 배열 (Recorded audio numpy array)
-            audio_np = np.concatenate(ctx.processor.recorded_frames, axis=0)
+        # MFCC 히트맵 시각화 (Visualize MFCC heatmap)
+        if st.checkbox(texts["show_heatmap_mic"]):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
+            ax.set_title(texts["mfcc_heatmap_title_mic"])
+            ax.set_xlabel("Time")  # 시간 축 (Time axis)
+            ax.set_ylabel("MFCC Coefficients")  # MFCC 계수 축 (MFCC coefficient axis)
+            st.pyplot(fig)
 
-            # WebRTC 기본 샘플레이트 (일반적으로 48000) (WebRTC default sample rate)
-            samplerate = 48000
-
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpfile:
-                sf.write(tmpfile.name, audio_np, samplerate)  # 임시 wav 파일 저장 (Save temp wav file)
-
-                # librosa로 로드 및 MFCC 추출 (Load audio and extract MFCC with librosa)
-                y, sr = librosa.load(tmpfile.name)
-                mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)  # n_mfcc = 13 → 29로 변경
-                mfcc_mean = np.mean(mfcc, axis=1)
-                mfcc_std = np.std(mfcc, axis=1)
-                features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
-                features_scaled = scaler.transform(features)
-
-                # 모델 예측 (Model prediction)
-                prediction_encoded = model.predict(features_scaled)
-                prediction = label_encoder.inverse_transform(prediction_encoded)[0]
-                st.success(f"🎶 Predicted Genre (Mic): `{prediction.capitalize()}`")
-
-                # 예측 확률 시각화 (Show prediction probabilities)
-                if hasattr(model, "predict_proba"):
-                    proba = model.predict_proba(features_scaled)[0]
-                    classes = label_encoder.inverse_transform(model.classes_)
-                    st.bar_chart(dict(zip(classes, proba)))
-
-                # 여기에 체크박스 + 히트맵 시각화 코드 넣기 (Insert checkbox + heatmap visualization code here)
-                if st.checkbox(texts["show_heatmap_mic"]):
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-                    ax.set_title(texts["mfcc_heatmap_title_mic"])
-                    ax.set_xlabel("Time")
-                    ax.set_ylabel("MFCC Coefficients")
-                    st.pyplot(fig)
-
-        except Exception as e:
-            st.error(f"Error during microphone processing: {e}")
-    else:
-        # 녹음 시작 안내 문구 출력 (Show mic recording start info)
-        st.info(texts["mic_start_info"])
+    except Exception as e:
+        st.error(f"마이크 오디오 처리 중 오류 발생: {e}")  # Error during mic audio processing
 else:
-    # ctx 객체가 없을 때도 안내 메시지 출력 (Show mic start info if ctx is None)
-    st.info(texts["mic_start_info"])
-
+    st.info(texts["mic_start_info"])  # 녹음 시작 안내 (Mic recording start message)
