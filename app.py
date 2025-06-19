@@ -426,6 +426,9 @@ selected_language_name = st.sidebar.selectbox(
     index=default_index
 )
 
+# 선택된 언어명 바로 아래에 표시 (Display selected language name for debugging)
+st.sidebar.write(f"Selected language: {selected_language_name}")
+
 # 언어 이름 → 코드 역매핑 (Map selected language name back to language code)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
 
