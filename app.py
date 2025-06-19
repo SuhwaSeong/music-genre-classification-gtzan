@@ -580,6 +580,9 @@ else:
 st.markdown("## 🎤 Real-Time Mic Recording")
 st.info("🔇 Real-time mic recording is not supported in this version. Please upload a .wav file instead.")
 
+# audio_bytes = audio_recorder() 등 삭제됨
+# audio_bytes 사용도 삭제됨
+
 # 🔽 기존 코드는 주석 처리 (원할 때 다시 살릴 수 있도록)
 # from streamlit_audio_recorder import audio_recorder
 # audio_bytes = audio_recorder()
