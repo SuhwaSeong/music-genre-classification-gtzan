@@ -1,4 +1,4 @@
-streamlit
+streamlit>=1.35.0
 librosa==0.10.1
 numpy
 pandas
@@ -7,4 +7,3 @@ seaborn
 joblib
 soundfile
 scikit-learn
-streamlit-audio-recorder
