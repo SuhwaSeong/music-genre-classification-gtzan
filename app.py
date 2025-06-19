@@ -8,7 +8,6 @@ import pandas as pd
 import base64
 import tempfile  # 임시 파일 처리를 위한 모듈 (For temporary file handling)
 import soundfile as sf  # 오디오 파일 읽고 쓰기용 (For reading/writing audio files)
-from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
