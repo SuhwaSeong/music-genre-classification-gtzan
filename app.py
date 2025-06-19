@@ -472,7 +472,7 @@ ctx = webrtc_streamer(
 
 if ctx and ctx.state.playing:
     st.info("🎙 Recording... Click STOP when done.")
-elif ctx and not ctx.state.playing and ctx.processor:
+elif ctx and not ctx.state.playing and hasattr(ctx, "processor") and ctx.processor:
     st.success("Recording complete! Analyzing...")
     audio_np = np.concatenate(ctx.processor.recorded_frames, axis=0)
     samplerate = 48000  # WebRTC 기본 샘플레이트
