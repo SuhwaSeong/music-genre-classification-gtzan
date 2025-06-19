@@ -7,3 +7,4 @@ scikit-learn
 streamlit-webrtc
 soundfile
 av
+streamlit-audio-recorder
