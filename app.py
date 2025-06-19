@@ -427,7 +427,7 @@ if uploaded_files:
 
         # MFCC 특징 추출 (Extract MFCC features)
         y, sr = librosa.load(file_obj, duration=30)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29) #n_mfcc= 13 → 29로 변경
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
@@ -516,7 +516,7 @@ if ctx:
                 
                 # librosa로 로드 및 MFCC 추출 (Load audio and extract MFCC with librosa)
                 y, sr = librosa.load(tmpfile.name, duration=30)
-                mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+                mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29) # n_mfcc = 13 → 29로 변경
                 mfcc_mean = np.mean(mfcc, axis=1)
                 mfcc_std = np.std(mfcc, axis=1)
                 features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
