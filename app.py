@@ -576,52 +576,47 @@ if uploaded_files:
 else:
     st.info(texts["start_info"])
 
-# --- 실시간 마이크 녹음 기능 (Real-Time Mic Recording) ---
-#from streamlit_audio_recorder import audio_recorder
-
+# --- 실시간 마이크 녹음 기능 제거됨 (Streamlit Cloud 호환 안됨) ---
 st.markdown("## 🎤 Real-Time Mic Recording")
+st.info("🔇 Real-time mic recording is not supported in this version. Please upload a .wav file instead.")
 
-#audio_bytes = audio_recorder()
+# 🔽 기존 코드는 주석 처리 (원할 때 다시 살릴 수 있도록)
+# from streamlit_audio_recorder import audio_recorder
+# audio_bytes = audio_recorder()
 
-if audio_bytes:
-    st.audio(audio_bytes, format="audio/wav")
+# if audio_bytes:
+#     st.audio(audio_bytes, format="audio/wav")
+#     try:
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
+#             tmpfile.write(audio_bytes)
+#             tmpfile_path = tmpfile.name
 
-    try:
-        # 오디오 데이터를 임시 파일로 저장 (Save audio data to a temporary file)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-            tmpfile.write(audio_bytes)
-            tmpfile_path = tmpfile.name
+#         y, sr = librosa.load(tmpfile_path)
+#         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
+#         mfcc_mean = np.mean(mfcc, axis=1)
+#         mfcc_std = np.std(mfcc, axis=1)
+#         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
+#         features_scaled = scaler.transform(features)
 
-        # librosa로 오디오 로드 및 MFCC 추출 (Load audio with librosa and extract MFCC features)
-        y, sr = librosa.load(tmpfile_path)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
-        mfcc_mean = np.mean(mfcc, axis=1)  # MFCC 평균값 (mean values)
-        mfcc_std = np.std(mfcc, axis=1)    # MFCC 표준편차 (standard deviation)
-        features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
-        features_scaled = scaler.transform(features)  # 특징 스케일링 (Scale features)
+#         prediction_encoded = model.predict(features_scaled)
+#         prediction = label_encoder.inverse_transform(prediction_encoded)[0]
+#         st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
 
-        # 모델 예측 (Predict with the model)
-        prediction_encoded = model.predict(features_scaled)
-        prediction = label_encoder.inverse_transform(prediction_encoded)[0]
-        st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
+#         if hasattr(model, "predict_proba"):
+#             proba = model.predict_proba(features_scaled)[0]
+#             classes = label_encoder.inverse_transform(model.classes_)
+#             proba_dict = dict(zip(classes, proba))
+#             st.bar_chart(proba_dict)
 
-        # 예측 확률 시각화 (Visualize prediction probabilities)
-        if hasattr(model, "predict_proba"):
-            proba = model.predict_proba(features_scaled)[0]
-            classes = label_encoder.inverse_transform(model.classes_)
-            proba_dict = dict(zip(classes, proba))
-            st.bar_chart(proba_dict)
+#         if st.checkbox(texts["show_heatmap_mic"]):
+#             fig, ax = plt.subplots(figsize=(8, 4))
+#             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
+#             ax.set_title(texts["mfcc_heatmap_title_mic"])
+#             ax.set_xlabel("Time")
+#             ax.set_ylabel("MFCC Coefficients")
+#             st.pyplot(fig)
 
-        # MFCC 히트맵 시각화 (Visualize MFCC heatmap)
-        if st.checkbox(texts["show_heatmap_mic"]):
-            fig, ax = plt.subplots(figsize=(8, 4))
-            sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-            ax.set_title(texts["mfcc_heatmap_title_mic"])
-            ax.set_xlabel("Time")  # 시간 축 (Time axis)
-            ax.set_ylabel("MFCC Coefficients")  # MFCC 계수 축 (MFCC coefficient axis)
-            st.pyplot(fig)
-
-    except Exception as e:
-        st.error(f"마이크 오디오 처리 중 오류 발생: {e}")  # Error during mic audio processing
-else:
-    st.info(texts["mic_start_info"])  # 녹음 시작 안내 (Mic recording start message)
+#     except Exception as e:
+#         st.error(f"마이크 오디오 처리 중 오류 발생: {e}")
+# else:
+#     st.info(texts["mic_start_info"])
