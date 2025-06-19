@@ -447,3 +447,57 @@ if uploaded_files:
         st.error(f"Something went wrong while processing the audio file.\n\nError: {e}")
 else:
     st.info(texts["start_info"])
+
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+import tempfile
+import soundfile as sf
+
+# 실시간 마이크 녹음 기능
+st.markdown("## 🎤 Real-Time Mic Recording")
+
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.recorded_frames = []
+
+    def recv(self, frame):
+        self.recorded_frames.append(frame.to_ndarray().flatten())
+        return frame
+
+ctx = webrtc_streamer(
+    key="mic",
+    mode="sendonly",
+    audio_receiver_size=1024,
+    client_settings={"media_stream_constraints": {"audio": True, "video": False}},
+    processor_factory=AudioProcessor,
+)
+
+if ctx and ctx.state.playing:
+    st.info("🎙 Recording... Click STOP when done.")
+elif ctx and not ctx.state.playing and ctx.processor:
+    st.success("Recording complete! Analyzing...")
+    audio_np = np.concatenate(ctx.processor.recorded_frames, axis=0)
+    samplerate = 48000  # WebRTC 기본 샘플레이트
+
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpfile:
+        sf.write(tmpfile.name, audio_np, samplerate)
+
+        y, sr = librosa.load(tmpfile.name, duration=30)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        mfcc_mean = np.mean(mfcc, axis=1)
+        mfcc_std = np.std(mfcc, axis=1)
+        features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
+        features_scaled = scaler.transform(features)
+
+        prediction = label_encoder.inverse_transform(model.predict(features_scaled))[0]
+        st.success(f"🎶 Predicted Genre (Mic): `{prediction.capitalize()}`")
+
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(features_scaled)[0]
+            classes = label_encoder.inverse_transform(model.classes_)
+            st.bar_chart(dict(zip(classes, proba)))
+
+        if st.checkbox("Show MFCC Heatmap (Mic Input)"):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
+            st.pyplot(fig)
+
