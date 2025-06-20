@@ -1,85 +1,58 @@
-# Music Genre Classifier
+# 🎵 Music Genre Classification with GTZAN
 
-🎵 **Music Genre Classifier** — A multilingual audio classification web app built with Streamlit
+A multilingual music genre classification web app built with Streamlit. It classifies `.wav` audio files into genres using machine learning models including CNN, Random Forest, and SVM. The app supports 18 languages and offers intuitive audio upload, real-time recording, and visual outputs such as MFCC heatmaps and prediction probabilities.
 
----
+## 📂 Dataset
 
-## Overview
+- **GTZAN Genre Collection**  
+  10 genres × 100 samples (30-second `.wav` files)  
+  Source: [Kaggle - GTZAN Dataset](https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification)
 
-This project classifies music genres from `.wav` audio files using machine learning models (Random Forest and SVM) in Python.
-It extracts MFCC (Mel Frequency Cepstral Coefficients) features from audio and inputs them into the models, providing classification results along with visualizations.
+## 🧠 Models Used
 
----
+| Model           | Description                                     | Accuracy |
+|----------------|--------------------------------------------------|----------|
+| 🎲 Random Forest | MFCC features + classic ensemble learning       | ~64%     |
+| 🔍 SVM           | Support Vector Machine with MFCC input          | ~61%     |
+| 🧠 CNN (NEW)     | Deep learning model using mel spectrogram images | TBD      |
 
-## Features
+> CNN model is under training and will soon be integrated into the app.
 
-* Multilingual user interface supporting 20+ languages (including Korean, English, German)
-* Choice between Random Forest and SVM classification models
-* Upload multiple `.wav` files and select files for individual classification
-* Displays predicted genre with probability bar charts
-* Visualizes MFCC heatmaps for audio features
-* Download classification reports and sample audio files
+## 🚀 Features
 
----
+- 🎧 Upload or record `.wav` files
+- 🌍 Multilingual UI (18 languages)
+- 🔥 Visual MFCC heatmaps
+- 📈 Display prediction probabilities
+- 📦 Downloadable classification reports
 
-## Installation & Usage
+## 🛠️ Tech Stack
 
-1. Install Python 3.8 or higher
-2. Install required packages:
+- Python, Streamlit, NumPy, Librosa, Scikit-learn, TensorFlow/Keras
+- Matplotlib, Seaborn, Pandas
+- Streamlit-webrtc (for real-time recording)
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set the path of model files (`rf_model.pkl`, `svm_model.pkl`, etc.) and report CSV files in the `BASE_PATH` variable inside `app.py`.
-4. Run the Streamlit app:
+## 🖥️ Demo
 
-   ```bash
-   streamlit run app.py
-   ```
+Try the live app 👉  
+[https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/](https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/)
 
----
+## 📸 Screenshots
 
-## How to Use
+![App Screenshot](screenshots/demo_1.png)
 
-1. Select your preferred language in the sidebar.
-2. Choose the classification model (Random Forest or SVM).
-3. Upload one or more `.wav` audio files.
-4. Select a file from the uploaded list to classify.
-5. View the predicted genre, prediction probabilities, and MFCC heatmap visualization.
-6. Download the classification report and sample audio via sidebar buttons.
+## 📌 To Do
 
----
+- [x] Add multilingual support  
+- [x] Add MFCC + heatmap display  
+- [x] Add model selection (RF, SVM)  
+- [ ] Train & integrate CNN  
+- [ ] Improve performance with data augmentation  
+- [ ] Add user feedback form for continuous learning  
 
-## Contributing
+## 📄 License
 
-Contributions are welcome! If you are interested or have suggestions:
-
-* Please open issues on the GitHub repository for bugs or feature requests.
-* Submit pull requests (PRs) with your changes for new features or bug fixes.
-* Include detailed descriptions of your changes in the PR to help with review.
-* Please follow the existing code style and conventions.
-
----
-
-## Reporting Issues & Support
-
-* If you encounter any problems or have ideas for improvement, please report them via GitHub issues.
-* For urgent inquiries, feel free to contact me at [suhwa.seong86@gmail.com](mailto:suhwa.seong86@gmail.com).
-* I will do my best to respond promptly.
-
----
-
-## Developer
-
-**Suhwa Seong**
-
-* Email: [suhwa.seong86@gmail.com](mailto:suhwa.seong86@gmail.com)
-* GitHub: [https://github.com/SuhwaSeong](https://github.com/SuhwaSeong)
-
----
-
-## License
-
-This project is licensed under the MIT License.
+MIT License  
+Feel free to use, modify, and contribute.
 
 ---
