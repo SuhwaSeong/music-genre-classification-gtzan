@@ -447,7 +447,7 @@ model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
 # 모델 선택 및 로딩
-model_option = st.radio(_["select_model"], ("Random Forest", "SVM"))
+model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 
 if model_option == "Random Forest":
     model = joblib.load("model.pkl")
@@ -469,38 +469,44 @@ report_df = pd.read_csv(report_path, index_col=0)
 report_metrics = report_df.loc[:, ["precision", "recall", "f1-score"]]
 
 # 앱 제목
-st.markdown("""
-<h1 style='text-align: center; color: #FF4B4B;'>🎵 Music Genre Classifier</h1>
-<p style='text-align: center;'>Upload one or more .wav files</p>
+st.markdown(f"""
+<h1 style='text-align: center; color: #FF4B4B;'>🎵 {texts['title']}</h1>
+<p style='text-align: center;'>{texts['upload']}</p>
 <hr>
 """, unsafe_allow_html=True)
 
 # 사이드바 - 앱 정보 및 성능
 with open("sample.wav", "rb") as audio_file:
-    st.sidebar.header("About This App")
+    st.sidebar.header(texts["about_app"])
     st.sidebar.markdown(f"""
     **Created by Suhwa Seong**  
-    Model: {model_option}  
+    {texts['select_model']}: {model_option}  
     Features: 13 or 29 MFCCs (mean + std)  
-    Accuracy: ~64% (RF) / ~61% (SVM)
+    {texts['accuracy_rf']}: ~64%  
+    {texts['accuracy_svm']}: ~61%
     """)
-    st.sidebar.download_button(_["download_rf"] if model_option == "Random Forest" else _["download_svm"], report_data, file_name=report_path, mime="text/csv")
+    st.sidebar.download_button(
+        label=texts["download_rf"] if model_option == "Random Forest" else texts["download_svm"],
+        data=report_data,
+        file_name=report_path,
+        mime="text/csv"
+    )
     st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
 
 # 모델 성능 시각화
-with st.expander("📊 Model Performance Metrics"):
+with st.expander(f"📊 {texts['model_performance']}"):
     st.dataframe(report_metrics)
     fig, ax = plt.subplots(figsize=(8, 4))
     report_metrics.plot(kind="bar", ax=ax)
-    ax.set_title("Model Performance")
+    ax.set_title(texts["model_performance"])
     ax.set_ylabel("Score")
     st.pyplot(fig)
 
 # 파일 업로드 및 처리
-uploaded_files = st.file_uploader(_["upload"], type=["wav"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
 if uploaded_files:
     filenames = [file.name for file in uploaded_files]
-    selected_file = st.selectbox("Select a file to classify", filenames)
+    selected_file = st.selectbox(texts["select_file"], filenames)
     file_obj = next(file for file in uploaded_files if file.name == selected_file)
 
     try:
@@ -517,7 +523,7 @@ if uploaded_files:
 
         prediction_encoded = model.predict(features_scaled)
         prediction = label_encoder.inverse_transform(prediction_encoded)
-        st.success(f"🎶 Predicted Genre: `{prediction[0].capitalize()}`")
+        st.success(f"🎶 {texts['predicted_genre']}: `{prediction[0].capitalize()}`")
 
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
@@ -527,17 +533,17 @@ if uploaded_files:
             st.markdown("### 🔍 Prediction Probabilities")
             st.bar_chart(proba_dict)
 
-        with st.expander("Model Accuracy Summary"):
-            st.markdown("""
-            - Random Forest Accuracy: ~64%  
-            - SVM Accuracy: ~61%  
-            - Best genres: 🎼 Classical, 🤘 Metal, 🎷 Jazz
+        with st.expander(texts["accuracy_summary"]):
+            st.markdown(f"""
+            - {texts['accuracy_rf']}: ~64%  
+            - {texts['accuracy_svm']}: ~61%  
+            - {texts['best_genres']}: 🎼 Classical, 🤘 Metal, 🎷 Jazz
             """)
 
-        if st.checkbox("Show MFCC Heatmap"):
+        if st.checkbox(texts["show_heatmap"]):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-            ax.set_title("MFCC Features")
+            ax.set_title(texts["mfcc_heatmap_title_mic"])
             ax.set_xlabel("Time")
             ax.set_ylabel("MFCC Coefficients")
             st.pyplot(fig)
@@ -546,4 +552,4 @@ if uploaded_files:
         st.error("Something went wrong while processing the audio file.")
         st.exception(e)
 else:
-    st.info("Please upload one or more .wav files to get started.")
+    st.info(texts["start_info"])
