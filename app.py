@@ -443,118 +443,81 @@ language_code = list(lang_dict.keys())[language_names.index(selected_language_na
 # texts 할당 (Assign texts dictionary for selected language)
 texts = lang_dict[language_code]
 
-# 페이지 설정 (Page setup)
-st.set_page_config(page_title=texts["title"], layout="centered")
+# 페이지 설정
+st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
-# 모델 선택 (Model selection)
-model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
+# 모델 선택
+model_option = st.radio("Choose a model", ("Random Forest", "SVM"))
 model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
-model = joblib.load(model_file)  # 모델 불러오기 (Load model)
-scaler = joblib.load("scaler.pkl")  # 스케일러 불러오기 (Load scaler)
-label_encoder = joblib.load("label_encoder.pkl")  # 레이블 인코더 불러오기 (Load label encoder)
+model = joblib.load(model_file)
+scaler = joblib.load("scaler.pkl")
+label_encoder = joblib.load("label_encoder.pkl")
 
-# 모델 설명 안내문구 표시 (Show model description)
-if model_option == "Random Forest":
-    st.info(texts["model_desc_rf"])
-elif model_option == "SVM":
-    st.info(texts["model_desc_svm"])
+# 모델 설명
+st.info("Random Forest: Combines multiple decisions" if model_option == "Random Forest" else "SVM: Separates with decision boundary")
 
-# 평가 리포트 CSV 경로 (CSV paths for evaluation reports)
-rf_report_path = "rf_classification_report.csv"
-svm_report_path = "svm_classification_report.csv"
+# 리포트 로드
+report_path = "rf_classification_report.csv" if model_option == "Random Forest" else "svm_classification_report.csv"
+with open(report_path, "rb") as f:
+    report_data = f.read()
+report_df = pd.read_csv(report_path, index_col=0)
+report_metrics = report_df.loc[:, ["precision", "recall", "f1-score"]]
 
-# 선택한 모델에 따라 평가 리포트 불러오기 (Load evaluation report based on model)
-if model_option == "Random Forest":
-    with open(rf_report_path, "rb") as rf_file:
-        rf_data = rf_file.read()
-    report_df = pd.read_csv(rf_report_path, index_col=0)
-else:
-    with open(svm_report_path, "rb") as svm_file:
-        svm_data = svm_file.read()
-    report_df = pd.read_csv(svm_report_path, index_col=0)
-
-# 주요 지표만 선택 (Select main metrics)
-metrics = ["precision", "recall", "f1-score"]
-report_metrics = report_df.loc[:, metrics]
-
-# 앱 헤더 (App header)
-st.markdown(f"""
-<h1 style='text-align: center; color: #FF4B4B;'>🎵 {texts['title']}</h1>
-<p style='text-align: center;'>{texts['upload']}</p>
+# 앱 제목
+st.markdown("""
+<h1 style='text-align: center; color: #FF4B4B;'>🎵 Music Genre Classifier</h1>
+<p style='text-align: center;'>Upload one or more .wav files</p>
 <hr>
 """, unsafe_allow_html=True)
 
-# 샘플 오디오 다운로드 버튼 (Sample audio download buttons)
+# 사이드바 - 앱 정보
 with open("sample.wav", "rb") as audio_file:
-    st.sidebar.header(texts["about_app"])
-
-    st.sidebar.markdown(f"""
+    st.sidebar.header("About This App")
+    st.sidebar.markdown("""
     **Created by Suhwa Seong**  
     Model: {model_option}  
     Features: 13 MFCCs (mean + std)  
-    Accuracy: ~64% if Random Forest else ~61%
+    Accuracy: ~64% (RF) / ~61% (SVM)
     """)
+    st.sidebar.download_button("⬇️ Download Classification Report", report_data, file_name=report_path, mime="text/csv")
+    st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
 
-    # 리포트 다운로드 버튼 (Report download buttons)
-    if model_option == "Random Forest":
-        st.sidebar.download_button(
-            label=texts["download_rf"],
-            data=rf_data,
-            file_name="rf_classification_report.csv",
-            mime="text/csv",
-        )
-    else:
-        st.sidebar.download_button(
-            label=texts["download_svm"],
-            data=svm_data,
-            file_name="svm_classification_report.csv",
-            mime="text/csv",
-        )
+# 본문 - 모델 성능 시각화
+with st.expander("📊 Model Performance Metrics"):
+    st.dataframe(report_metrics)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    report_metrics.plot(kind="bar", ax=ax)
+    ax.set_title("Model Performance")
+    ax.set_ylabel("Score")
+    st.pyplot(fig)
 
-    st.sidebar.download_button(
-        label="⬇️ Download Sample Audio (.wav)",
-        data=audio_file,
-        file_name="sample.wav",
-        mime="audio/wav"
-    )
-
-    st.sidebar.header(texts["model_performance"])
-    st.sidebar.dataframe(report_metrics)
-    st.sidebar.bar_chart(report_metrics)
-
-# 여러 파일 업로드 (Multiple file uploader)
-uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
-
+# 파일 업로드
+uploaded_files = st.file_uploader("Upload one or more .wav files", type=["wav"], accept_multiple_files=True)
 if uploaded_files:
     filenames = [file.name for file in uploaded_files]
-    selected_file = st.selectbox(texts["select_file"], filenames)
-
-    # 선택한 파일 객체 찾기 (Find selected file object)
+    selected_file = st.selectbox("Select a file to classify", filenames)
     file_obj = next(file for file in uploaded_files if file.name == selected_file)
 
     try:
-        # 오디오 재생 (Play audio)
         audio_bytes = file_obj.read()
         st.audio(audio_bytes, format='audio/wav')
+        file_obj.seek(0)
 
-        file_obj.seek(0)  # 파일 포인터 초기화 (Reset file pointer)
-
-        # MFCC 특징 추출 (Extract MFCC features)
         y, sr = librosa.load(file_obj)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)  # n_mfcc= 13 → 29로 변경
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
-
-        # 스케일링 (Scaling features)
         features_scaled = scaler.transform(features)
 
-        # 예측 수행 (Make prediction)
         prediction_encoded = model.predict(features_scaled)
         prediction = label_encoder.inverse_transform(prediction_encoded)
-        st.success(f"🎶 **{texts['predicted_genre']}:** `{prediction[0].capitalize()}`")
+        st.success(f"🎶 Predicted Genre: `{prediction[0].capitalize()}`")
 
-        # 예측 확률 보기 (가능할 경우) (Show prediction probabilities if available)
+        st.write("📌 MFCC Shape:", mfcc.shape)
+        st.write("📌 Features Shape:", features.shape)
+        st.write("📌 Prediction Encoded:", prediction_encoded)
+
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
             classes_encoded = model.classes_
@@ -563,16 +526,14 @@ if uploaded_files:
             st.markdown("### 🔍 Prediction Probabilities")
             st.bar_chart(proba_dict)
 
-        # 정확도 요약 (Accuracy summary)
-        with st.expander(texts["accuracy_summary"]):
-            st.markdown(f"""
-            - **{texts['accuracy_rf']}:** ~64%  
-            - **{texts['accuracy_svm']}:** ~61%  
-            - {texts['best_genres']}: 🎼 `Classical`, 🤘 `Metal`, 🎷 `Jazz`
+        with st.expander("Model Accuracy Summary"):
+            st.markdown("""
+            - Random Forest Accuracy: ~64%  
+            - SVM Accuracy: ~61%  
+            - Best genres: 🎼 Classical, 🤘 Metal, 🎷 Jazz
             """)
 
-        # MFCC 히트맵 시각화 (Visualize MFCC heatmap)
-        if st.checkbox(texts["show_heatmap"]):
+        if st.checkbox("Show MFCC Heatmap"):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
             ax.set_title("MFCC Features")
@@ -581,58 +542,45 @@ if uploaded_files:
             st.pyplot(fig)
 
     except Exception as e:
-        st.error(f"Something went wrong while processing the audio file.\n\nError: {e}")
+        st.error("Something went wrong while processing the audio file.")
+        st.exception(e)
 else:
-    st.info(texts["start_info"])
+    st.info("Please upload one or more .wav files to get started.")
 
-# --- 실시간 마이크 녹음 기능 (조건부 분기) ---
+# 마이크 입력 (Streamlit Cloud 미지원)
 st.markdown("## 🎤 Real-Time Mic Recording")
-
-# Streamlit Cloud에서는 secrets.toml 미지원 → 로컬에서만 활성화
 if st.secrets.get("IS_LOCAL", False):
     try:
         from streamlit_audio_recorder import audio_recorder
-
         audio_bytes = audio_recorder()
-
         if audio_bytes:
             st.audio(audio_bytes, format="audio/wav")
-
-            # 오디오 데이터를 임시 파일로 저장
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
                 tmpfile.write(audio_bytes)
                 tmpfile_path = tmpfile.name
-
-            # MFCC 특징 추출
             y, sr = librosa.load(tmpfile_path)
             mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
             mfcc_mean = np.mean(mfcc, axis=1)
             mfcc_std = np.std(mfcc, axis=1)
             features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
             features_scaled = scaler.transform(features)
-
-            # 예측 수행
             prediction_encoded = model.predict(features_scaled)
             prediction = label_encoder.inverse_transform(prediction_encoded)[0]
-            st.success(f"🎶 {texts['predicted_genre']} (Mic): `{prediction.capitalize()}`")
-
-            # 예측 확률 시각화
+            st.success(f"🎶 Predicted Genre (Mic): `{prediction.capitalize()}`")
             if hasattr(model, "predict_proba"):
                 proba = model.predict_proba(features_scaled)[0]
                 classes = label_encoder.inverse_transform(model.classes_)
                 proba_dict = dict(zip(classes, proba))
                 st.bar_chart(proba_dict)
-
-            # MFCC 히트맵
-            if st.checkbox(texts["show_heatmap_mic"]):
+            if st.checkbox("Show MFCC Heatmap (Mic Input)"):
                 fig, ax = plt.subplots(figsize=(8, 4))
                 sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-                ax.set_title(texts["mfcc_heatmap_title_mic"])
+                ax.set_title("MFCC Features (Mic Input)")
                 ax.set_xlabel("Time")
                 ax.set_ylabel("MFCC Coefficients")
                 st.pyplot(fig)
         else:
-            st.info(texts["mic_start_info"])
+            st.info("Click the button above to start recording.")
     except Exception as e:
         st.error(f"⚠️ Mic processing error: {e}")
 else:
