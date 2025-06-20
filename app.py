@@ -7,6 +7,7 @@ import seaborn as sns
 import pandas as pd
 import os
 from io import BytesIO
+import tensorflow as tf
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -420,11 +421,16 @@ lang_dict = {
     },
 }
 
+# --- 장르 레이블 (CNN용)
+genre_labels = ['blues', 'classical', 'country', 'disco', 'hiphop',
+                'jazz', 'metal', 'pop', 'reggae', 'rock']
+
 # --- 설정 상수 ---
-BASE_PATH = ""  
+BASE_PATH = ""
 MODEL_FILES = {
     "Random Forest": "rf_model.pkl",
-    "SVM": "svm_model.pkl"
+    "SVM": "svm_model.pkl",
+    "CNN": "cnn_genre_model.keras"
 }
 REPORT_FILES = {
     "Random Forest": "rf_classification_report.csv",
@@ -433,9 +439,15 @@ REPORT_FILES = {
 SCALER_FILE = "scaler.pkl"
 LABEL_ENCODER_FILE = "label_encoder.pkl"
 SAMPLE_AUDIO_FILE = "sample.wav"
-N_MFCC = 13  # MFCC 개수 (mean+std 해서 총 26 feature)
+N_MFCC = 13
 
 # --- 유틸 함수 ---
+@st.cache_resource
+def load_cnn_model():
+    model = tf.keras.models.load_model(MODEL_FILES["CNN"], compile=False)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
 def load_model_files(model_name: str):
     model_path = os.path.join(BASE_PATH, MODEL_FILES[model_name])
     scaler_path = os.path.join(BASE_PATH, SCALER_FILE)
@@ -464,132 +476,92 @@ def extract_features(audio_bytes, n_mfcc):
     features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
     return features, mfcc
 
+def extract_mel_spectrogram(audio_bytes, max_len=128):
+    y, sr = librosa.load(BytesIO(audio_bytes), sr=22050)
+    mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+    mel_db = librosa.power_to_db(mel, ref=np.max)
+
+    if mel_db.shape[1] > max_len:
+        mel_db = mel_db[:, :max_len]
+    else:
+        pad_width = max_len - mel_db.shape[1]
+        mel_db = np.pad(mel_db, pad_width=((0, 0), (0, pad_width)), mode='constant')
+
+    return mel_db[np.newaxis, ..., np.newaxis], mel_db
+
 def check_class_alignment(model, label_encoder):
     try:
         model_classes = label_encoder.inverse_transform(model.classes_)
-    except Exception as e:
-        st.warning(f"Class alignment check failed: {e}")
+    except Exception:
         model_classes = label_encoder.classes_
-    else:
-        if not np.array_equal(model_classes, label_encoder.classes_):
-            st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
     return model_classes
 
 # --- 앱 시작 ---
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
+st.title("🎵 Music Genre Classifier (with CNN Support)")
 
-language_names = [v["language_name"] for v in lang_dict.values()]
-selected_language = st.sidebar.selectbox("Choose Language / 언어 선택", language_names)
-language_code = list(lang_dict.keys())[language_names.index(selected_language)]
-texts = lang_dict[language_code]
+model_option = st.selectbox("Choose a model", list(MODEL_FILES.keys()))
 
-model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
-
-model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
-
-model_classes = check_class_alignment(model, label_encoder)
-
-st.markdown(
-    f"<h1 style='text-align:center;color:#FF4B4B;'>🎵 {texts['title']}</h1>"
-    f"<p style='text-align:center;'>{texts['upload']}</p><hr>",
-    unsafe_allow_html=True,
-)
-
-sample_audio_path = os.path.join(BASE_PATH, SAMPLE_AUDIO_FILE)
-if os.path.isfile(sample_audio_path):
-    with open(sample_audio_path, "rb") as sample_audio:
-        sample_audio_bytes = sample_audio.read()
-    st.sidebar.header(texts["about_app"])
-    st.sidebar.markdown(
-        f"""
-**Created by Suhwa Seong**  
-{texts['select_model']}: {model_option}  
-Features: {N_MFCC * 2} (mean + std)  
-{texts['accuracy_rf']}: ~64%  
-{texts['accuracy_svm']}: ~61%
-"""
-    )
-    st.sidebar.download_button(
-        label=texts["download_rf"] if model_option == "Random Forest" else texts["download_svm"],
-        data=report_data,
-        file_name=os.path.basename(report_path),
-        mime="text/csv",
-    )
-    st.sidebar.download_button(
-        label="⬇️ Download Sample Audio (.wav)",
-        data=sample_audio_bytes,
-        file_name=SAMPLE_AUDIO_FILE,
-        mime="audio/wav",
-    )
+if model_option == "CNN":
+    model = load_cnn_model()
 else:
-    st.sidebar.warning(f"Sample audio file not found at {sample_audio_path}")
+    model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
+    model_classes = check_class_alignment(model, label_encoder)
 
-with st.expander(f"📊 {texts['model_performance']}"):
-    st.dataframe(report_df.loc[:, ["precision", "recall", "f1-score"]])
-    fig, ax = plt.subplots(figsize=(8, 4))
-    report_df.loc[:, ["precision", "recall", "f1-score"]].plot(kind="bar", ax=ax)
-    ax.set_title(texts["model_performance"])
-    ax.set_ylabel("Score")
-    st.pyplot(fig)
-    plt.close(fig)
+uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"])
 
-uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
+if uploaded_file:
+    audio_bytes = uploaded_file.read()
+    st.audio(audio_bytes, format="audio/wav")
 
-if uploaded_files:
-    filenames = [f.name for f in uploaded_files]
-    selected_file = st.selectbox(texts["select_file"], filenames)
-    file_obj = next(f for f in uploaded_files if f.name == selected_file)
+    if model_option == "CNN":
+        features, mel = extract_mel_spectrogram(audio_bytes)
+        prediction = model.predict(features)
+        predicted_index = np.argmax(prediction)
+        predicted_label = genre_labels[predicted_index]
 
-    try:
-        with st.spinner("Processing audio..."):
-            audio_bytes = file_obj.read()
-            st.audio(audio_bytes, format="audio/wav")
+        st.success(f"🎶 Predicted Genre: `{predicted_label.capitalize()}`")
 
-            try:
-                features, mfcc = extract_features(audio_bytes, N_MFCC)
-            except Exception as e:
-                st.error("Error during feature extraction.")
-                st.exception(e)
-                st.stop()
+        st.markdown("### 🔍 Prediction Probabilities")
+        proba_dict = dict(zip(genre_labels, prediction[0]))
+        st.bar_chart(proba_dict)
 
-            try:
-                features_scaled = scaler.transform(features)
-            except Exception as e:
-                st.error("Error during feature scaling.")
-                st.exception(e)
-                st.stop()
+        if st.checkbox("Show Mel Spectrogram"):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.heatmap(mel, cmap="YlGnBu", ax=ax)
+            ax.set_title("Mel Spectrogram")
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Mel Bands")
+            st.pyplot(fig)
+            plt.close(fig)
 
-            try:
-                prediction_encoded = model.predict(features_scaled)
-                prediction = label_encoder.inverse_transform(prediction_encoded)
-            except Exception as e:
-                st.error("Error during model prediction.")
-                st.exception(e)
-                st.stop()
-
-            st.success(f"🎶 {texts['predicted_genre']}: `{prediction[0].capitalize()}`")
+    else:
+        try:
+            features, mfcc = extract_features(audio_bytes, N_MFCC)
+            features_scaled = scaler.transform(features)
+            prediction_encoded = model.predict(features_scaled)
+            prediction = label_encoder.inverse_transform(prediction_encoded)
+            st.success(f"🎶 Predicted Genre: `{prediction[0].capitalize()}`")
 
             if hasattr(model, "predict_proba"):
-                try:
-                    proba = model.predict_proba(features_scaled)[0]
-                    proba_dict = dict(zip(model_classes, proba))
-                    st.markdown("### 🔍 Prediction Probabilities")
-                    st.bar_chart(proba_dict)
-                except Exception as e:
-                    st.warning("Could not show prediction probabilities.")
-                    st.exception(e)
+                proba = model.predict_proba(features_scaled)[0]
+                proba_dict = dict(zip(model_classes, proba))
+                st.markdown("### 🔍 Prediction Probabilities")
+                st.bar_chart(proba_dict)
 
-            if st.checkbox(texts["show_heatmap"]):
+            if st.checkbox("Show MFCC Heatmap"):
                 fig, ax = plt.subplots(figsize=(8, 4))
                 sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-                ax.set_title(texts["mfcc_heatmap_title_mic"])
+                ax.set_title("MFCC Features")
                 ax.set_xlabel("Time")
                 ax.set_ylabel("MFCC Coefficients")
                 st.pyplot(fig)
                 plt.close(fig)
 
-    except Exception as e:
-        st.error("Something went wrong while processing the audio file.")
-        st.exception(e)
+        except Exception as e:
+            st.error("❌ Error during prediction.")
+            st.exception(e)
 else:
-    st.info(texts["start_info"])
+    st.info("Please upload a .wav file to get started.")
+
+
