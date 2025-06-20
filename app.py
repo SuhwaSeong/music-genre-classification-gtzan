@@ -441,12 +441,13 @@ st.sidebar.write(f"Selected language: {selected_language_name}")
 # 언어 이름 → 코드 역매핑 (Map selected language name back to language code)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
 
-model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
+# ✅ 선택한 언어 코드에 맞는 텍스트 딕셔너리 불러오기
+texts = lang_dict[language_code]
 
-# 페이지 설정
+# --- 페이지 설정 ---
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
-# 모델 선택 및 로딩
+# --- 모델 선택 및 로딩 ---
 model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 
 if model_option == "Random Forest":
