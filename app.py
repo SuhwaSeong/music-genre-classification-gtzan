@@ -92,17 +92,10 @@ def extract_mel_spectrogram(audio_bytes, max_len=128):
 genre_labels = ['blues', 'classical', 'country', 'disco', 'hiphop',
                 'jazz', 'metal', 'pop', 'reggae', 'rock']
 
-# Pick random sample
+# Disable random sample feature on Streamlit Cloud
 @st.cache_data
 def pick_random_wav_file():
-    base_dir = "/content/gtzan_data/Data/genres_original"
-    genres = [g for g in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, g))]
-    genre = random.choice(genres)
-    files = [f for f in os.listdir(os.path.join(base_dir, genre)) if f.endswith(".wav")]
-    if not files:
-        return None, None
-    file = random.choice(files)
-    return os.path.join(base_dir, genre, file), f"{genre} - {file}"
+    return None, None
 
 # Audio download link
 def get_audio_download_link(file_path, label):
