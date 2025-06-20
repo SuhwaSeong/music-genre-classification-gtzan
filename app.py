@@ -422,26 +422,11 @@ lang_dict = {
     },
 }
 
-# 언어 이름 리스트 생성 (Create list of language names)
+# 언어 이름 리스트 생성
 language_names = [lang_dict[code]["language_name"] for code in lang_dict.keys()]
-
-# 기본 언어 인덱스 (Default language index, e.g. English)
-default_index = language_names.index("English (영어)")
-
-# 선택된 언어 이름 받기 (Get selected language name from sidebar)
-selected_language_name = st.sidebar.selectbox(
-    "Choose Language / 언어 선택",
-    options=language_names,
-    index=default_index
-)
-
-# 선택된 언어명 바로 아래에 표시 (Display selected language name for debugging)
-st.sidebar.write(f"Selected language: {selected_language_name}")
-
-# 언어 이름 → 코드 역매핑 (Map selected language name back to language code)
+selected_language_name = st.sidebar.selectbox("Choose Language / 언어 선택", options=language_names)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
-
-# ✅ 선택한 언어 코드에 맞는 텍스트 딕셔너리 불러오기
+st.sidebar.write(f"Selected language: {selected_language_name}")
 texts = lang_dict[language_code]
 
 # --- 페이지 설정 ---
@@ -463,10 +448,9 @@ scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
 # 리포트 불러오기
-report_path = report_file
-with open(report_path, "rb") as f:
+with open(report_file, "rb") as f:
     report_data = f.read()
-report_df = pd.read_csv(report_path, index_col=0)
+report_df = pd.read_csv(report_file, index_col=0)
 report_metrics = report_df.loc[:, ["precision", "recall", "f1-score"]]
 
 # 앱 제목
@@ -476,7 +460,7 @@ st.markdown(f"""
 <hr>
 """, unsafe_allow_html=True)
 
-# 사이드바 - 앱 정보 및 성능
+# 사이드바 정보
 with open("sample.wav", "rb") as audio_file:
     st.sidebar.header(texts["about_app"])
     st.sidebar.markdown(f"""
@@ -489,7 +473,7 @@ with open("sample.wav", "rb") as audio_file:
     st.sidebar.download_button(
         label=texts["download_rf"] if model_option == "Random Forest" else texts["download_svm"],
         data=report_data,
-        file_name=report_path,
+        file_name=report_file,
         mime="text/csv"
     )
     st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
@@ -503,7 +487,7 @@ with st.expander(f"📊 {texts['model_performance']}"):
     ax.set_ylabel("Score")
     st.pyplot(fig)
 
-# 파일 업로드 및 처리
+# 파일 업로드
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
 if uploaded_files:
     filenames = [file.name for file in uploaded_files]
@@ -530,21 +514,24 @@ if uploaded_files:
             proba = model.predict_proba(features_scaled)[0]
             classes_encoded = model.classes_
             classes = label_encoder.inverse_transform(classes_encoded)
-            proba_dict = dict(zip(classes, proba))
+            proba_df = pd.DataFrame({"Genre": classes, "Probability": proba})
+            proba_df = proba_df.sort_values(by="Probability", ascending=False)
             st.markdown("### 🔍 Prediction Probabilities")
-            st.bar_chart(proba_dict)
+            fig, ax = plt.subplots()
+            sns.barplot(x="Probability", y="Genre", data=proba_df, ax=ax)
+            st.pyplot(fig)
 
         with st.expander(texts["accuracy_summary"]):
             st.markdown(f"""
             - {texts['accuracy_rf']}: ~64%  
             - {texts['accuracy_svm']}: ~61%  
-            - {texts['best_genres']}: 🎼 Classical, 🤘 Metal, 🎷 Jazz
+            - {texts['best_genres']}: 🎼 Classical, 🦸 Metal, 🍇 Jazz
             """)
 
         if st.checkbox(texts["show_heatmap"]):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-            ax.set_title(texts["mfcc_heatmap_title_mic"])
+            ax.set_title("MFCC Heatmap")
             ax.set_xlabel("Time")
             ax.set_ylabel("MFCC Coefficients")
             st.pyplot(fig)
