@@ -421,7 +421,8 @@ lang_dict = {
 }
 
 # --- 설정 상수 ---
-BASE_PATH = "/content"  # 구글 드라이브가 아닌 Colab 기본 경로에 모델 파일들이 있음
+BASE_PATH = "/content/drive/MyDrive/gtzan_data"
+  # 구글 드라이브가 아닌 Colab 기본 경로에 모델 파일들이 있음
 MODEL_FILES = {
     "Random Forest": "rf_model.pkl",
     "SVM": "svm_model.pkl"
