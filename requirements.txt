@@ -1,11 +1,11 @@
 streamlit
+librosa>=0.10.0
 numpy
-pandas
-librosa
 joblib
 matplotlib
 seaborn
-tensorflow==2.12.0
-soundfile
+pandas
 gdown
+tensorflow
+soundfile
 scikit-learn
