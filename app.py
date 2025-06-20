@@ -5,7 +5,7 @@ import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import soundfile as sf
+import os
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -419,67 +419,116 @@ lang_dict = {
     },
 }
 
-# 언어 선택
+# --- 설정 상수 ---
+BASE_PATH = "/content/"  # 경로 변경시 여기만 수정
+MODEL_FILES = {
+    "Random Forest": "rf_model.pkl",
+    "SVM": "svm_model.pkl"
+}
+REPORT_FILES = {
+    "Random Forest": "rf_classification_report.csv",
+    "SVM": "svm_classification_report.csv"
+}
+SCALER_FILE = "scaler.pkl"
+LABEL_ENCODER_FILE = "label_encoder.pkl"
+SAMPLE_AUDIO_FILE = "sample.wav"
+N_MFCC = 13  # MFCC 개수 (mean+std 해서 총 26 feature)
+
+# --- 유틸 함수 ---
+def load_model_files(model_name: str):
+    model_path = os.path.join(BASE_PATH, MODEL_FILES[model_name])
+    scaler_path = os.path.join(BASE_PATH, SCALER_FILE)
+    label_enc_path = os.path.join(BASE_PATH, LABEL_ENCODER_FILE)
+    report_path = os.path.join(BASE_PATH, REPORT_FILES[model_name])
+
+    # 파일 존재 여부 체크
+    for path in [model_path, scaler_path, label_enc_path, report_path]:
+        if not os.path.isfile(path):
+            st.error(f"Required file not found: {path}")
+            st.stop()
+
+    model = joblib.load(model_path)
+    scaler = joblib.load(scaler_path)
+    label_encoder = joblib.load(label_enc_path)
+    report_df = pd.read_csv(report_path, index_col=0)
+    with open(report_path, "rb") as f:
+        report_data = f.read()
+
+    return model, scaler, label_encoder, report_df, report_data, report_path
+
+def extract_features(file_obj, n_mfcc):
+    # sr=None으로 원본 샘플링레이트 유지 권장
+    y, sr = librosa.load(file_obj, sr=None)
+    mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
+    mfcc_mean = np.mean(mfcc, axis=1)
+    mfcc_std = np.std(mfcc, axis=1)
+    features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
+    return features, mfcc
+
+# --- 앱 시작 ---
+
+# 언어 선택 UI
 language_names = [v["language_name"] for v in lang_dict.values()]
 selected_language = st.sidebar.selectbox("Choose Language / 언어 선택", language_names)
 language_code = list(lang_dict.keys())[language_names.index(selected_language)]
 texts = lang_dict[language_code]
 
 # 페이지 설정
-st.set_page_config(page_title="Music Genre Classifier", layout="centered")
+st.set_page_config(page_title=texts["title"], layout="centered")
 
-# 모델 선택
-model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
+# 모델 선택 UI
+model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
 
-if model_option == "Random Forest":
-    model = joblib.load("model.pkl")
-    n_mfcc = 29
-    report_file = "rf_classification_report.csv"
-elif model_option == "SVM":
-    model = joblib.load("svm_model.pkl")
-    n_mfcc = 13
-    report_file = "svm_classification_report.csv"
+# 모델 및 관련 파일 로딩
+model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
 
-scaler = joblib.load("scaler.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+# UI: 제목 및 안내
+st.markdown(
+    f"<h1 style='text-align:center;color:#FF4B4B;'>🎵 {texts['title']}</h1>"
+    f"<p style='text-align:center;'>{texts['upload']}</p><hr>",
+    unsafe_allow_html=True,
+)
 
-# 리포트 로딩
-with open(report_file, "rb") as f:
-    report_data = f.read()
-report_df = pd.read_csv(report_file, index_col=0)
-report_metrics = report_df.loc[:, ["precision", "recall", "f1-score"]]
-
-# 제목 표시
-st.markdown(f"<h1 style='text-align:center;color:#FF4B4B;'>🎵 {texts['title']}</h1><p style='text-align:center;'>{texts['upload']}</p><hr>", unsafe_allow_html=True)
-
-# 사이드바 정보
-with open("sample.wav", "rb") as sample_audio:
+# 사이드바: 앱 정보 및 샘플 오디오 다운로드
+sample_audio_path = os.path.join(BASE_PATH, SAMPLE_AUDIO_FILE)
+if os.path.isfile(sample_audio_path):
+    with open(sample_audio_path, "rb") as sample_audio:
+        sample_audio_bytes = sample_audio.read()
     st.sidebar.header(texts["about_app"])
-    st.sidebar.markdown(f"""
+    st.sidebar.markdown(
+        f"""
 **Created by Suhwa Seong**  
 {texts['select_model']}: {model_option}  
-Features: {n_mfcc * 2} (mean + std)  
+Features: {N_MFCC * 2} (mean + std)  
 {texts['accuracy_rf']}: ~64%  
 {texts['accuracy_svm']}: ~61%
-    """)
+"""
+    )
     st.sidebar.download_button(
         label=texts["download_rf"] if model_option == "Random Forest" else texts["download_svm"],
         data=report_data,
-        file_name=report_file,
-        mime="text/csv"
+        file_name=os.path.basename(report_path),
+        mime="text/csv",
     )
-    st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", sample_audio, file_name="sample.wav", mime="audio/wav")
+    st.sidebar.download_button(
+        label="⬇️ Download Sample Audio (.wav)",
+        data=sample_audio_bytes,
+        file_name=SAMPLE_AUDIO_FILE,
+        mime="audio/wav",
+    )
+else:
+    st.sidebar.warning(f"Sample audio file not found at {sample_audio_path}")
 
-# 모델 성능 지표
+# 모델 성능 지표 시각화
 with st.expander(f"📊 {texts['model_performance']}"):
-    st.dataframe(report_metrics)
+    st.dataframe(report_df.loc[:, ["precision", "recall", "f1-score"]])
     fig, ax = plt.subplots(figsize=(8, 4))
-    report_metrics.plot(kind="bar", ax=ax)
+    report_df.loc[:, ["precision", "recall", "f1-score"]].plot(kind="bar", ax=ax)
     ax.set_title(texts["model_performance"])
     ax.set_ylabel("Score")
     st.pyplot(fig)
 
-# 오디오 파일 업로드
+# 오디오 파일 업로드 및 처리
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
 
 if uploaded_files:
@@ -488,34 +537,55 @@ if uploaded_files:
     file_obj = next(f for f in uploaded_files if f.name == selected_file)
 
     try:
-        audio_bytes = file_obj.read()
-        st.audio(audio_bytes, format='audio/wav')
-        file_obj.seek(0)
-        y, sr = librosa.load(file_obj)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
-        mfcc_mean = np.mean(mfcc, axis=1)
-        mfcc_std = np.std(mfcc, axis=1)
-        features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
-        features_scaled = scaler.transform(features)
+        with st.spinner("Processing audio..."):
+            audio_bytes = file_obj.read()
+            st.audio(audio_bytes, format="audio/wav")
+            file_obj.seek(0)
 
-        prediction_encoded = model.predict(features_scaled)
-        prediction = label_encoder.inverse_transform(prediction_encoded)
-        st.success(f"🎶 {texts['predicted_genre']}: `{prediction[0].capitalize()}`")
+            # 추출 단계별로 예외 처리 분리
+            try:
+                features, mfcc = extract_features(file_obj, N_MFCC)
+            except Exception as e:
+                st.error("Error during feature extraction.")
+                st.exception(e)
+                st.stop()
 
-        if hasattr(model, "predict_proba"):
-            proba = model.predict_proba(features_scaled)[0]
-            classes = label_encoder.inverse_transform(model.classes_)
-            proba_dict = dict(zip(classes, proba))
-            st.markdown("### 🔍 Prediction Probabilities")
-            st.bar_chart(proba_dict)
+            try:
+                features_scaled = scaler.transform(features)
+            except Exception as e:
+                st.error("Error during feature scaling.")
+                st.exception(e)
+                st.stop()
 
-        if st.checkbox(texts["show_heatmap"]):
-            fig, ax = plt.subplots(figsize=(8, 4))
-            sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-            ax.set_title(texts["mfcc_heatmap_title_mic"])
-            ax.set_xlabel("Time")
-            ax.set_ylabel("MFCC Coefficients")
-            st.pyplot(fig)
+            try:
+                prediction_encoded = model.predict(features_scaled)
+                prediction = label_encoder.inverse_transform(prediction_encoded)
+            except Exception as e:
+                st.error("Error during model prediction.")
+                st.exception(e)
+                st.stop()
+
+            st.success(f"🎶 {texts['predicted_genre']}: `{prediction[0].capitalize()}`")
+
+            if hasattr(model, "predict_proba"):
+                try:
+                    proba = model.predict_proba(features_scaled)[0]
+                    # model.classes_가 label_encoder와 일치하는지 확인
+                    classes = label_encoder.inverse_transform(model.classes_)
+                    proba_dict = dict(zip(classes, proba))
+                    st.markdown("### 🔍 Prediction Probabilities")
+                    st.bar_chart(proba_dict)
+                except Exception as e:
+                    st.warning("Could not show prediction probabilities.")
+                    st.exception(e)
+
+            if st.checkbox(texts["show_heatmap"]):
+                fig, ax = plt.subplots(figsize=(8, 4))
+                sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
+                ax.set_title(texts["mfcc_heatmap_title_mic"])
+                ax.set_xlabel("Time")
+                ax.set_ylabel("MFCC Coefficients")
+                st.pyplot(fig)
 
     except Exception as e:
         st.error("Something went wrong while processing the audio file.")
