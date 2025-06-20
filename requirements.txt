@@ -1,9 +1,11 @@
 streamlit
 librosa
-numpy
 matplotlib
 seaborn
 pandas
-joblib
+numpy
 soundfile
-tensorflow
+joblib
+tensorflow==2.11.0
+# streamlit_audio_recorder는 문제가 될 수 있음. 아래 줄로 대체하세요:
+streamlit-audiorec @ git+https://github.com/stefanrmmr/streamlit_audio_recorder.git
