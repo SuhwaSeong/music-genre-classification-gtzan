@@ -12,6 +12,19 @@ import gdown
 from io import BytesIO
 import tensorflow as tf
 
+def download_file_if_missing(file_name, file_id):
+    if not os.path.exists(file_name):
+        with st.spinner(f"📥 Downloading {file_name}..."):
+            gdown.download(f"https://drive.google.com/uc?id={file_id}", file_name, quiet=False)
+
+# --- 파일 자동 다운로드 (중복 다운로드 방지) ---
+download_file_if_missing("rf_model.pkl", "1oBV5HpsvgoCLr5CYLvrmR6wbMiNP89Gi")
+download_file_if_missing("svm_model.pkl", "1B3ftW3aIze7gC_QrDK7WAqROBs19jwHt")
+download_file_if_missing("scaler.pkl", "1tbkqFV95yHrvsLd9NpUvj1QSRpIoen0k")
+download_file_if_missing("label_encoder.pkl", "1i3wvy68pVMpzjK5y2ny3OeB5KQGEGcQs")
+download_file_if_missing("rf_classification_report.csv", "1WEkLBZrsFcdFoLLeGH737Feqf5ihmZsB")
+download_file_if_missing("svm_classification_report.csv", "1FmegZMchjzuX0Tr6aF7rxrvlbmp_Ei-d")
+
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
     "ko": {
