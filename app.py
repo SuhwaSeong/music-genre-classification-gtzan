@@ -421,8 +421,7 @@ lang_dict = {
 }
 
 # --- 설정 상수 ---
-# 구글 드라이브에 마운트한 경로 (본인의 드라이브 경로에 맞게 수정하세요)
-BASE_PATH = "/content/"
+BASE_PATH = "/content"  # 구글 드라이브가 아닌 Colab 기본 경로에 모델 파일들이 있음
 MODEL_FILES = {
     "Random Forest": "rf_model.pkl",
     "SVM": "svm_model.pkl"
@@ -435,9 +434,6 @@ SCALER_FILE = "scaler.pkl"
 LABEL_ENCODER_FILE = "label_encoder.pkl"
 SAMPLE_AUDIO_FILE = "sample.wav"
 N_MFCC = 13  # MFCC 개수 (mean+std 해서 총 26 feature)
-
-# 데이터셋 경로는 Colab 환경 작업공간 아래에 위치하는 것으로 분리 관리
-DATASET_PATH = "/content/gtzan_data/Data/genres_original"
 
 # --- 유틸 함수 ---
 def load_model_files(model_name: str):
@@ -476,33 +472,25 @@ def check_class_alignment(model, label_encoder):
     return model_classes
 
 # --- 앱 시작 ---
-
-# 페이지 설정 (최상단 위치 권장)
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
-# 언어 선택 UI
 language_names = [v["language_name"] for v in lang_dict.values()]
 selected_language = st.sidebar.selectbox("Choose Language / 언어 선택", language_names)
 language_code = list(lang_dict.keys())[language_names.index(selected_language)]
 texts = lang_dict[language_code]
 
-# 모델 선택 UI
 model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
 
-# 모델 및 관련 파일 로딩
 model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
 
-# 모델 클래스와 레이블 인코더 클래스 일치 확인
 model_classes = check_class_alignment(model, label_encoder)
 
-# UI: 제목 및 안내
 st.markdown(
     f"<h1 style='text-align:center;color:#FF4B4B;'>🎵 {texts['title']}</h1>"
     f"<p style='text-align:center;'>{texts['upload']}</p><hr>",
     unsafe_allow_html=True,
 )
 
-# 사이드바: 앱 정보 및 샘플 오디오 다운로드
 sample_audio_path = os.path.join(BASE_PATH, SAMPLE_AUDIO_FILE)
 if os.path.isfile(sample_audio_path):
     with open(sample_audio_path, "rb") as sample_audio:
@@ -532,7 +520,6 @@ Features: {N_MFCC * 2} (mean + std)
 else:
     st.sidebar.warning(f"Sample audio file not found at {sample_audio_path}")
 
-# 모델 성능 지표 시각화
 with st.expander(f"📊 {texts['model_performance']}"):
     st.dataframe(report_df.loc[:, ["precision", "recall", "f1-score"]])
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -542,7 +529,6 @@ with st.expander(f"📊 {texts['model_performance']}"):
     st.pyplot(fig)
     plt.close(fig)
 
-# 오디오 파일 업로드 및 처리
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
 
 if uploaded_files:
@@ -555,7 +541,6 @@ if uploaded_files:
             audio_bytes = file_obj.read()
             st.audio(audio_bytes, format="audio/wav")
 
-            # 추출 단계별로 예외 처리 분리
             try:
                 features, mfcc = extract_features(audio_bytes, N_MFCC)
             except Exception as e:
