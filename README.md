@@ -37,10 +37,6 @@ A multilingual music genre classification web app built with Streamlit. It class
 Try the live app 👉  
 [https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/](https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/)
 
-## 📸 Screenshots
-
-![App Screenshot](screenshots/demo_1.png)
-
 ## 📌 To Do
 
 - [x] Add multilingual support  
