@@ -465,10 +465,14 @@ def extract_features(audio_bytes, n_mfcc):
     return features, mfcc
 
 def check_class_alignment(model, label_encoder):
-    model_classes = label_encoder.inverse_transform(model.classes_)
-    label_enc_classes = label_encoder.classes_
-    if not np.array_equal(model_classes, label_enc_classes):
-        st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
+    try:
+        model_classes = label_encoder.inverse_transform(model.classes_)
+    except Exception as e:
+        st.warning(f"Class alignment check failed: {e}")
+        model_classes = label_encoder.classes_
+    else:
+        if not np.array_equal(model_classes, label_encoder.classes_):
+            st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
     return model_classes
 
 # --- 앱 시작 ---
