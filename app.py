@@ -441,8 +441,7 @@ st.sidebar.write(f"Selected language: {selected_language_name}")
 # 언어 이름 → 코드 역매핑 (Map selected language name back to language code)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
 
-# texts 할당 (Assign texts dictionary for selected language)
-texts = lang_dict[language_code]
+model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 
 # 페이지 설정
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
