@@ -421,9 +421,9 @@ lang_dict = {
 }
 
 # --- 설정 상수 ---
-BASE_PATH = "/content/"  # 경로 변경시 여기만 수정
+BASE_PATH = ""  # 경로 변경시 여기만 수정
 MODEL_FILES = {
-    "Random Forest": "rf_model.pkl",
+    "Random Forest": "model.pkl",  # 여기만 수정
     "SVM": "svm_model.pkl"
 }
 REPORT_FILES = {
