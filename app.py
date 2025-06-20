@@ -8,6 +8,7 @@ import pandas as pd
 import base64
 import tempfile
 import soundfile as sf
+import os
 from io import BytesIO
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
@@ -422,11 +423,10 @@ lang_dict = {
     },
 }
 
-# 언어 이름 리스트 생성
-language_names = [lang_dict[code]["language_name"] for code in lang_dict.keys()]
-selected_language_name = st.sidebar.selectbox("Choose Language / 언어 선택", options=language_names)
+# --- 언어 설정 ---
+language_names = [lang_dict[code]["language_name"] for code in lang_dict]
+selected_language_name = st.sidebar.selectbox("Choose Language", options=language_names)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
-st.sidebar.write(f"Selected language: {selected_language_name}")
 texts = lang_dict[language_code]
 
 # --- 페이지 설정 ---
