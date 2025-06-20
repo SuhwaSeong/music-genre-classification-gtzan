@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import base64
 import random
+import gdown
 from io import BytesIO
 import tensorflow as tf
 
@@ -354,7 +355,16 @@ def get_audio_download_link(file_path, label):
 # --- CNN 모델 로드 ---
 @st.cache_resource
 def load_cnn_model():
-    model = tf.keras.models.load_model(MODEL_FILES["CNN"], compile=False)
+    model_url = "https://drive.google.com/uc?id=1y-OF_0qDIeCj_Cxo3GEYVc4fv_bMu_O2"
+    model_path = "cnn_genre_model.keras"
+    
+    # 모델이 없으면 다운로드
+    if not os.path.exists(model_path):
+        with st.spinner("Downloading CNN model from Google Drive..."):
+            gdown.download(model_url, model_path, quiet=False)
+    
+    # 모델 로드
+    model = tf.keras.models.load_model(model_path, compile=False)
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
