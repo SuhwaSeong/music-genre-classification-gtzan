@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import os
+from io import BytesIO
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -456,16 +457,27 @@ def load_model_files(model_name: str):
 
     return model, scaler, label_encoder, report_df, report_data, report_path
 
-def extract_features(file_obj, n_mfcc):
-    # sr=None으로 원본 샘플링레이트 유지 권장
-    y, sr = librosa.load(file_obj, sr=None)
+def extract_features(audio_bytes, n_mfcc):
+    # BytesIO로 감싸 librosa.load에 전달, sr=None으로 원본 샘플링레이트 유지
+    y, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
     mfcc_mean = np.mean(mfcc, axis=1)
     mfcc_std = np.std(mfcc, axis=1)
     features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
     return features, mfcc
 
+def check_class_alignment(model, label_encoder):
+    # 모델 클래스와 라벨 인코더 클래스 일치 여부 확인
+    model_classes = label_encoder.inverse_transform(model.classes_)
+    label_enc_classes = label_encoder.classes_
+    if not np.array_equal(model_classes, label_enc_classes):
+        st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
+    return model_classes
+
 # --- 앱 시작 ---
+
+# 페이지 설정 (최상단 위치 권장)
+st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
 # 언어 선택 UI
 language_names = [v["language_name"] for v in lang_dict.values()]
@@ -473,14 +485,14 @@ selected_language = st.sidebar.selectbox("Choose Language / 언어 선택", lang
 language_code = list(lang_dict.keys())[language_names.index(selected_language)]
 texts = lang_dict[language_code]
 
-# 페이지 설정
-st.set_page_config(page_title=texts["title"], layout="centered")
-
 # 모델 선택 UI
 model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
 
 # 모델 및 관련 파일 로딩
 model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
+
+# 모델 클래스와 레이블 인코더 클래스 일치 확인
+model_classes = check_class_alignment(model, label_encoder)
 
 # UI: 제목 및 안내
 st.markdown(
@@ -527,6 +539,7 @@ with st.expander(f"📊 {texts['model_performance']}"):
     ax.set_title(texts["model_performance"])
     ax.set_ylabel("Score")
     st.pyplot(fig)
+    plt.close(fig)  # 메모리 누수 방지
 
 # 오디오 파일 업로드 및 처리
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
@@ -540,11 +553,10 @@ if uploaded_files:
         with st.spinner("Processing audio..."):
             audio_bytes = file_obj.read()
             st.audio(audio_bytes, format="audio/wav")
-            file_obj.seek(0)
 
             # 추출 단계별로 예외 처리 분리
             try:
-                features, mfcc = extract_features(file_obj, N_MFCC)
+                features, mfcc = extract_features(audio_bytes, N_MFCC)
             except Exception as e:
                 st.error("Error during feature extraction.")
                 st.exception(e)
@@ -570,9 +582,7 @@ if uploaded_files:
             if hasattr(model, "predict_proba"):
                 try:
                     proba = model.predict_proba(features_scaled)[0]
-                    # model.classes_가 label_encoder와 일치하는지 확인
-                    classes = label_encoder.inverse_transform(model.classes_)
-                    proba_dict = dict(zip(classes, proba))
+                    proba_dict = dict(zip(model_classes, proba))
                     st.markdown("### 🔍 Prediction Probabilities")
                     st.bar_chart(proba_dict)
                 except Exception as e:
@@ -586,6 +596,7 @@ if uploaded_files:
                 ax.set_xlabel("Time")
                 ax.set_ylabel("MFCC Coefficients")
                 st.pyplot(fig)
+                plt.close(fig)  # 메모리 누수 방지
 
     except Exception as e:
         st.error("Something went wrong while processing the audio file.")
