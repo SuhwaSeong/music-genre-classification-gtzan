@@ -12,10 +12,30 @@ import gdown
 from io import BytesIO
 import tensorflow as tf
 
+def show_accuracy_chart():
+    try:
+        acc_rf = pd.read_csv("rf_classification_report.csv", index_col=0).loc["accuracy"].values[0]
+        acc_svm = pd.read_csv("svm_classification_report.csv", index_col=0).loc["accuracy"].values[0]
+        df_acc = pd.DataFrame({
+            "Model": ["Random Forest", "SVM"],
+            "Accuracy": [acc_rf, acc_svm]
+        })
+        st.markdown("### 📈 Model Accuracy Comparison")
+        st.bar_chart(df_acc.set_index("Model"))
+    except Exception as e:
+        st.warning("⚠️ 모델 정확도 그래프를 불러오는 데 실패했습니다.")
+        st.exception(e)
+
+
 def download_file_if_missing(file_name, file_id):
     if not os.path.exists(file_name):
-        with st.spinner(f"📥 Downloading {file_name}..."):
-            gdown.download(f"https://drive.google.com/uc?id={file_id}", file_name, quiet=False)
+        try:
+            with st.spinner(f"📥 Downloading {file_name}..."):
+                gdown.download(f"https://drive.google.com/uc?id={file_id}", file_name, quiet=False)
+        except Exception as e:
+            st.error(f"❌ 파일 다운로드 실패: {file_name}")
+            st.exception(e)
+            st.stop()
 
 # --- 파일 자동 다운로드 (중복 다운로드 방지) ---
 download_file_if_missing("rf_model.pkl", "1oBV5HpsvgoCLr5CYLvrmR6wbMiNP89Gi")
@@ -442,6 +462,9 @@ model_option = st.selectbox(texts["select_model"], list(MODEL_FILES.keys()))
 if st.sidebar.button(texts["change_test"]):
     st.session_state.refresh_sample = not st.session_state.refresh_sample
 
+if st.sidebar.button("📊 정확도 비교 보기"):
+    show_accuracy_chart()
+
 sample_path, sample_name = pick_random_wav_file()
 if sample_path:
     st.sidebar.markdown(f"{texts['test_file']} `{sample_name}`")
@@ -470,7 +493,16 @@ if uploaded_file:
         st.success(f"{texts['prediction']} `{predicted_label.capitalize()}`")
         st.markdown(texts["prob"])
         st.bar_chart(dict(zip(genre_labels, prediction[0])))
+        
+            # --- 분류 리포트 다운로드 버튼 ---
+        st.download_button(
+            label=f"⬇️ {model_option} 분류 리포트 다운로드",
+            data=report_data,
+            file_name=os.path.basename(report_path),
+            mime="text/csv"
+        )
 
+        
         if st.checkbox(texts["mel"]):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mel, cmap="YlGnBu", ax=ax)
