@@ -423,18 +423,16 @@ lang_dict = {
     },
 }
 
-# --- 언어 설정 ---
-language_names = [lang_dict[code]["language_name"] for code in lang_dict]
-selected_language_name = st.sidebar.selectbox("Choose Language", options=language_names)
+# 2. 언어 선택 로직
+language_names = [lang_dict[code]["language_name"] for code in lang_dict.keys()]
+selected_language_name = st.sidebar.selectbox("Choose Language / 언어 선택", options=language_names)
 language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
-texts = lang_dict[language_code]
+texts = lang_dict[language_code]  # ✅ texts가 여기서 정의됨
 
-# --- 페이지 설정 ---
-st.set_page_config(page_title="Music Genre Classifier", layout="centered")
-
-# --- 모델 선택 및 로딩 ---
+# 3. 이 다음부터 사용해야 함
 model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 
+# 4. 모델 설정
 if model_option == "Random Forest":
     model = joblib.load("model.pkl")
     n_mfcc = 29
