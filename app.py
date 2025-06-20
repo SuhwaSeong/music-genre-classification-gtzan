@@ -11,439 +11,313 @@ import random
 from io import BytesIO
 import tensorflow as tf
 
-if "refresh_sample" not in st.session_state:
-    st.session_state.refresh_sample = False
-
-
-def pick_random_wav_file(base_dir="/content/gtzan_data/Data/genres_original"):
-    genres = [g for g in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, g))]
-    random_genre = random.choice(genres)
-    genre_path = os.path.join(base_dir, random_genre)
-    wav_files = [f for f in os.listdir(genre_path) if f.endswith(".wav")]
-
-    if not wav_files:
-        return None, None
-
-    random_file = random.choice(wav_files)
-    full_path = os.path.join(genre_path, random_file)
-    return full_path, f"{random_genre} - {random_file}"
-
-def get_audio_download_link(file_path, label="⬇️ 테스트용 .wav 파일 다운로드"):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    b64 = base64.b64encode(data).decode()
-    href = f'<a href="data:audio/wav;base64,{b64}" download="test_sample.wav">{label}</a>'
-    return href
-
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
-     "ko": {
+    "ko": {
         "language_name": "Korean (한국어)",
-        "title": "음악 장르 분류기",
+        "title": "🎵 음악 장르 분류기 (CNN 지원 포함)",
         "upload": ".wav 파일을 업로드하세요",
         "select_model": "모델 선택",
-        "download_rf": "⬇️ 랜덤 포레스트 분류 리포트 다운로드",
-        "download_svm": "⬇️ SVM 분류 리포트 다운로드",
-        "show_heatmap_mic": "MFCC 히트맵 보기 (마이크 입력)",
-        "mfcc_heatmap_title_mic": "MFCC 특징 (마이크 입력)",
-        "predicted_genre": "예측된 장르",
-        "show_heatmap": "MFCC 히트맵 보기",
-        "accuracy_summary": "모델 정확도 요약",
-        "accuracy_rf": "랜덤 포레스트 정확도",
-        "accuracy_svm": "SVM 정확도",
-        "best_genres": "가장 높은 성능을 보이는 장르",
-        "about_app": "앱 정보",
-        "model_performance": "모델 성능 지표",
-        "select_file": "분류할 파일 선택",
-        "choose_language": "언어 선택 / Choose Language",
-        "start_info": "하나 이상의 .wav 파일을 업로드 해주세요.",
-        "mic_start_info": "녹음을 시작하려면 위 버튼을 클릭하세요.",
-        "model_desc_rf": "랜덤 포레스트: 여러 판단 기준을 모아 최종 결정을 내리는 방법",
-        "model_desc_svm": "SVM: 데이터 경계선을 찾아 구분하는 방법"
+        "test_file": "🎧 테스트 파일:",
+        "download": "⬇️ 테스트용 .wav 파일 다운로드",
+        "prediction": "🎶 예측된 장르:",
+        "prob": "### 🔍 예측 확률",
+        "mfcc": "MFCC 히트맵 보기",
+        "mel": "Mel 스펙트로그램 보기",
+        "mfcc_title": "MFCC 특징",
+        "mel_title": "Mel 스펙트로그램",
+        "error": "❌ 예측 중 오류 발생",
+        "upload_prompt": ".wav 파일을 업로드하여 시작하세요.",
+        "no_file": "테스트용 .wav 파일이 없습니다.",
+        "change_test": "🔄 테스트 파일 변경"
     },
     "en": {
         "language_name": "English (영어)",
-        "title": "Music Genre Classifier",
-        "upload": "Upload one or more .wav files",
-        "select_model": "Choose a model",
-        "download_rf": "⬇️ Download Random Forest Classification Report",
-        "download_svm": "⬇️ Download SVM Classification Report",
-        "show_heatmap_mic": "Show MFCC Heatmap (Mic Input)",
-        "mfcc_heatmap_title_mic": "MFCC Features (Mic Input)",
-        "predicted_genre": "Predicted Genre",
-        "show_heatmap": "Show MFCC Heatmap",
-        "accuracy_summary": "Model Accuracy Summary",
-        "accuracy_rf": "Random Forest Accuracy",
-        "accuracy_svm": "SVM Accuracy",
-        "best_genres": "Best performing genres",
-        "about_app": "About This App",
-        "model_performance": "Model Performance Metrics",
-        "select_file": "Select a file to classify",
-        "choose_language": "Choose Language / 언어 선택",
-        "start_info": "Please upload one or more .wav files to get started.",
-        "mic_start_info": "Click the button above to start recording.",
-        "model_desc_rf": "Random Forest: A method that makes the final decision by combining many simple decisions",
-        "model_desc_svm": "SVM: A method that finds the boundary line to separate different groups of data"
+        "title": "🎵 Music Genre Classifier (with CNN support)",
+        "upload": "Upload a .wav file",
+        "select_model": "Select a model",
+        "test_file": "🎧 Test file:",
+        "download": "⬇️ Download test .wav file",
+        "prediction": "🎶 Predicted Genre:",
+        "prob": "### 🔍 Prediction Probabilities",
+        "mfcc": "Show MFCC Heatmap",
+        "mel": "Show Mel Spectrogram",
+        "mfcc_title": "MFCC Features",
+        "mel_title": "Mel Spectrogram",
+        "error": "❌ Error during prediction",
+        "upload_prompt": "Please upload a .wav file to get started.",
+        "no_file": "No test .wav file found.",
+        "change_test": "🔄 Change test file"
     },
     "de": {
         "language_name": "Deutsch (German-독일어)",
-        "title": "Musikgenre-Klassifikator",
-        "upload": "Laden Sie eine oder mehrere .wav-Dateien hoch",
-        "select_model": "Wählen Sie ein Modell",
-        "download_rf": "⬇️ Random Forest Klassifikationsbericht herunterladen",
-        "download_svm": "⬇️ SVM Klassifikationsbericht herunterladen",
-        "show_heatmap_mic": "MFCC Heatmap anzeigen (Mikrofoneingabe)",
-        "mfcc_heatmap_title_mic": "MFCC Merkmale (Mikrofoneingabe)",
-        "predicted_genre": "Vorhergesagtes Genre",
-        "show_heatmap": "MFCC Heatmap anzeigen",
-        "accuracy_summary": "Modellgenauigkeitszusammenfassung",
-        "accuracy_rf": "Random Forest Genauigkeit",
-        "accuracy_svm": "SVM Genauigkeit",
-        "best_genres": "Beste Genres",
-        "about_app": "Über diese App",
-        "model_performance": "Modellleistungsmetriken",
-        "select_file": "Wählen Sie eine Datei zur Klassifizierung",
-        "choose_language": "Sprache auswählen / Choose Language / 언어 선택",
-        "start_info": "Bitte laden Sie eine oder mehrere .wav-Dateien hoch, um zu beginnen.",
-        "mic_start_info": "Klicken Sie oben auf die Schaltfläche, um die Aufnahme zu starten.",
-        "model_desc_rf": "Random Forest: Eine Methode, die eine endgültige Entscheidung trifft, indem sie viele einfache Entscheidungen kombiniert",
-        "model_desc_svm": "SVM: Eine Methode, die die Grenze findet, um verschiedene Datenmengen zu trennen"
+        "title": "🎵 Musikgenre-Klassifizierer (mit CNN-Unterstützung)",
+        "upload": "Lade eine .wav-Datei hoch",
+        "select_model": "Modell auswählen",
+        "test_file": "🎧 Testdatei:",
+        "download": "⬇️ Test-.wav-Datei herunterladen",
+        "prediction": "🎶 Vorhergesagtes Genre:",
+        "prob": "### 🔍 Vorhersagewahrscheinlichkeiten",
+        "mfcc": "MFCC-Heatmap anzeigen",
+        "mel": "Mel-Spektrogramm anzeigen",
+        "mfcc_title": "MFCC-Merkmale",
+        "mel_title": "Mel-Spektrogramm",
+        "error": "❌ Fehler bei der Vorhersage",
+        "upload_prompt": "Bitte lade eine .wav-Datei hoch, um zu starten.",
+        "no_file": "Keine Test-.wav-Datei gefunden.",
+        "change_test": "🔄 Testdatei wechseln"
     },
     "pl": {
         "language_name": "Polski (Polish-폴란드어)",
-        "title": "Klasyfikator gatunków muzycznych",
-        "upload": "Prześlij jeden lub więcej plików .wav",
+        "title": "🎵 Klasyfikator gatunków muzycznych (z obsługą CNN)",
+        "upload": "Prześlij plik .wav",
         "select_model": "Wybierz model",
-        "download_rf": "⬇️ Pobierz raport klasyfikacji Random Forest",
-        "download_svm": "⬇️ Pobierz raport klasyfikacji SVM",
-        "show_heatmap_mic": "Pokaż mapę ciepła MFCC (wejście z mikrofonu)",
-        "mfcc_heatmap_title_mic": "Cechy MFCC (wejście z mikrofonu)",
-        "predicted_genre": "Przewidywany gatunek",
-        "show_heatmap": "Pokaż mapę ciepła MFCC",
-        "accuracy_summary": "Podsumowanie dokładności modelu",
-        "accuracy_rf": "Dokładność Random Forest",
-        "accuracy_svm": "Dokładność SVM",
-        "best_genres": "Najlepsze gatunki",
-        "about_app": "O aplikacji",
-        "model_performance": "Metryki wydajności modelu",
-        "select_file": "Wybierz plik do klasyfikacji",
-        "choose_language": "Wybierz język / Choose Language / 언어 선택",
-        "start_info": "Proszę przesłać jeden lub więcej plików .wav, aby rozpocząć.",
-        "mic_start_info": "Kliknij przycisk powyżej, aby rozpocząć nagrywanie.",
-        "model_desc_rf": "Random Forest: Metoda podejmująca ostateczną decyzję poprzez połączenie wielu prostych decyzji",
-        "model_desc_svm": "SVM: Metoda znajdująca linię graniczną rozdzielającą różne grupy danych"
+        "test_file": "🎧 Plik testowy:",
+        "download": "⬇️ Pobierz plik .wav do testów",
+        "prediction": "🎶 Przewidywany gatunek:",
+        "prob": "### 🔍 Prawdopodobieństwa przewidywania",
+        "mfcc": "Pokaż mapę cieplną MFCC",
+        "mel": "Pokaż spektrogram Mel",
+        "mfcc_title": "Cechy MFCC",
+        "mel_title": "Spektrogram Mel",
+        "error": "❌ Błąd podczas przewidywania",
+        "upload_prompt": "Prześlij plik .wav, aby rozpocząć.",
+        "no_file": "Nie znaleziono pliku .wav do testów.",
+        "change_test": "🔄 Zmień plik testowy"
     },
     "hi": {
         "language_name": "हिन्दी (Hindi-인도-힌디어)",        
-        "title": "संगीत शैली वर्गीकर्ता",
+        "title": "🎵 म्यूजिक शैली वर्गीकरण (CNN समर्थन सहित)",
         "upload": ".wav फ़ाइल अपलोड करें",
         "select_model": "मॉडल चुनें",
-        "download_rf": "⬇️ रैंडम फॉरेस्ट वर्गीकरण रिपोर्ट डाउनलोड करें",
-        "download_svm": "⬇️ एसवीएम वर्गीकरण रिपोर्ट डाउनलोड करें",
-        "show_heatmap_mic": "MFCC हीटमैप दिखाएँ (माइक इनपुट)",
-        "mfcc_heatmap_title_mic": "MFCC फीचर्स (माइक इनपुट)",
-        "predicted_genre": "अनुमानित शैली",
-        "show_heatmap": "MFCC हीटमैप दिखाएँ",
-        "accuracy_summary": "मॉडल सटीकता सारांश",
-        "accuracy_rf": "रैंडम फॉरेस्ट सटीकता",
-        "accuracy_svm": "एसवीएम सटीकता",
-        "best_genres": "सर्वश्रेष्ठ प्रदर्शन वाले शैलियाँ",
-        "about_app": "इस ऐप के बारे में",
-        "model_performance": "मॉडल प्रदर्शन मेट्रिक्स",
-        "select_file": "वर्गीकृत करने के लिए फ़ाइल चुनें",
-        "choose_language": "भाषा चुनें / Choose Language / 언어 선택",
-        "start_info": "शुरू करने के लिए एक या अधिक .wav फ़ाइलें अपलोड करें।",
-        "mic_start_info": "रिकॉर्डिंग शुरू करने के लिए ऊपर दिए गए बटन पर क्लिक करें।",
-        "model_desc_rf": "Random Forest: कई सरल निर्णयों को मिलाकर अंतिम निर्णय लेने की विधि",
-        "model_desc_svm": "SVM: डेटा समूहों को अलग करने वाली सीमा रेखा खोजने की विधि"
+        "test_file": "🎧 परीक्षण फ़ाइल:",
+        "download": "⬇️ परीक्षण .wav फ़ाइल डाउनलोड करें",
+        "prediction": "🎶 अनुमानित शैली:",
+        "prob": "### 🔍 भविष्यवाणी की संभावनाएँ",
+        "mfcc": "MFCC हीटमैप दिखाएँ",
+        "mel": "Mel स्पेक्ट्रोग्राम दिखाएँ",
+        "mfcc_title": "MFCC विशेषताएँ",
+        "mel_title": "Mel स्पेक्ट्रोग्राम",
+        "error": "❌ पूर्वानुमान के दौरान त्रुटि",
+        "upload_prompt": "शुरू करने के लिए कृपया .wav फ़ाइल अपलोड करें।",
+        "no_file": "कोई परीक्षण .wav फ़ाइल नहीं मिली।",
+        "change_test": "🔄 परीक्षण फ़ाइल बदलें"
     },
     "ta": {
         "language_name": "தமிழ் (Tamil-인도-타말어)",
-        "title": "பாடல் வகை வகைப்பான்",
-        "upload": ".wav கோப்புகளை பதிவேற்றவும்",
-        "select_model": "மாதிரியைத் தேர்ந்தெடுக்கவும்",
-        "download_rf": "⬇️ ரேண்டம் ஃபாரெஸ்ட் வகைப்பாட்டு அறிக்கை பதிவிறக்கு",
-        "download_svm": "⬇️ எஸ்விஎம் வகைப்பாட்டு அறிக்கை பதிவிறக்கு",
-        "show_heatmap_mic": "MFCC ஹீட்மாப் காண்க (மைக்ரோபோன் உள்ளீடு)",
-        "mfcc_heatmap_title_mic": "MFCC அம்சங்கள் (மைக்ரோபோன் உள்ளீடு)",
-        "predicted_genre": "முன்னறிவிப்பு வகை",
-        "show_heatmap": "MFCC ஹீட்மாப் காண்க",
-        "accuracy_summary": "மாதிரி துல்லியத் தொகுப்பு",
-        "accuracy_rf": "ரேண்டம் ஃபாரெஸ்ட் துல்லியம்",
-        "accuracy_svm": "எஸ்விஎம் துல்லியம்",
-        "best_genres": "சிறந்த செயல்திறன் வகைகள்",
-        "about_app": "இந்த செயலியின் பற்றி",
-        "model_performance": "மாதிரி செயல்திறன் அளவுகோல்கள்",
-        "select_file": "வகைப்படுத்த கோப்பைத் தேர்ந்தெடு",
-        "choose_language": "மொழி தேர்ந்தெடு / Choose Language / 언어 선택",
-        "start_info": "தொடங்க ஒரு அல்லது அதற்கு மேற்பட்ட .wav கோப்புகளை பதிவேற்றவும்.",
-        "mic_start_info": "பதிவு செய்ய ஆரம்பிக்க மேலுள்ள பொத்தானை அழுத்தவும்.",
-        "model_desc_rf": "Random Forest: பல எளிய முடிவுகளை இணைத்து இறுதி முடிவை எடுக்கும் முறை",
-        "model_desc_svm": "SVM: தரவு குழுக்களை பிரிக்க எல்லை வரியை கண்டுபிடிக்கும் முறை"
+        "title": "🎵 இசை வகை வகைப்படுத்தி (CNN ஆதரவுடன்)",
+        "upload": ".wav கோப்பை பதிவேற்று",
+        "select_model": "மாதிரியை தேர்ந்தெடு",
+        "test_file": "🎧 சோதனை கோப்பு:",
+        "download": "⬇️ சோதனை .wav கோப்பை பதிவிறக்கு",
+        "prediction": "🎶 கணிக்கப்பட்ட இசை வகை:",
+        "prob": "### 🔍 கணிப்பு சாத்தியக்கூறுகள்",
+        "mfcc": "MFCC வெப்பப்படத்தை காட்டு",
+        "mel": "Mel ஸ்பெக்ட்ரோகிராமை காட்டு",
+        "mfcc_title": "MFCC அம்சங்கள்",
+        "mel_title": "Mel ஸ்பெக்ட்ரோகம்",
+        "error": "❌ கணிப்பில் பிழை ஏற்பட்டது",
+        "upload_prompt": "தொடங்க .wav கோப்பை பதிவேற்று.",
+        "no_file": ".wav சோதனை கோப்பு இல்லை.",
+        "change_test": "🔄 சோதனை கோப்பை மாற்று"
     },
     "zh": {
-        "language_name": "中文 (China-중국어)",        
-        "title": "音乐类别分类器",
-        "upload": "上传一个或多个.wav文件",
+        "language_name": "中文 (China-중국어)",
+        "title": "🎵 音乐流派分类器（支持CNN）",
+        "upload": "上传 .wav 文件",
         "select_model": "选择模型",
-        "download_rf": "⬇️ 下载随机森林分类报告",
-        "download_svm": "⬇️ 下载SVM分类报告",
-        "show_heatmap_mic": "显示MFCC热图（麦克风输入）",
-        "mfcc_heatmap_title_mic": "MFCC 特征（麦克风输入）",
-        "predicted_genre": "预测的类别",
-        "show_heatmap": "显示MFCC热图",
-        "accuracy_summary": "模型准确度摘要",
-        "accuracy_rf": "随机森林准确度",
-        "accuracy_svm": "SVM准确度",
-        "best_genres": "表现最佳的类别",
-        "about_app": "关于此应用",
-        "model_performance": "模型性能指标",
-        "select_file": "选择要分类的文件",
-        "choose_language": "选择语言 / Choose Language / 언어 선택",
-        "start_info": "请上传一个或多个.wav文件开始使用。",
-        "mic_start_info": "点击上方按钮开始录音。",
-        "model_desc_rf": "随机森林：通过结合多个简单决策来做出最终决定的方法",
-        "model_desc_svm": "支持向量机：寻找分割不同数据组的边界线的方法"
+        "test_file": "🎧 测试文件:",
+        "download": "⬇️ 下载测试 .wav 文件",
+        "prediction": "🎶 预测的流派:",
+        "prob": "### 🔍 预测概率",
+        "mfcc": "显示 MFCC 热图",
+        "mel": "显示 Mel 频谱图",
+        "mfcc_title": "MFCC 特征",
+        "mel_title": "Mel 频谱图",
+        "error": "❌ 预测时发生错误",
+        "upload_prompt": "请上传 .wav 文件以开始。",
+        "no_file": "未找到测试 .wav 文件。",
+        "change_test": "🔄 更换测试文件"
     },
-    "hk": {
-        "language_name": "繁體中文-香港粵語 (Hong Kong Cantonese-홍콩어)",
-        "title": "音樂類型分類器",
-        "upload": "上載一個或多個.wav檔案",
+    "yue": {
+        "language_name": "粵語 (Cantonese-홍콩어)",
+        "title": "🎵 音樂類型分類器（支援CNN）",
+        "upload": "上傳 .wav 檔案",
         "select_model": "選擇模型",
-        "download_rf": "⬇️ 下載隨機森林分類報告",
-        "download_svm": "⬇️ 下載SVM分類報告",
-        "show_heatmap_mic": "顯示MFCC熱圖（麥克風輸入）",
-        "mfcc_heatmap_title_mic": "MFCC 特徵（麥克風輸入）",
-        "predicted_genre": "預測類別",
-        "show_heatmap": "顯示MFCC熱圖",
-        "accuracy_summary": "模型準確率摘要",
-        "accuracy_rf": "隨機森林準確率",
-        "accuracy_svm": "SVM準確率",
-        "best_genres": "表現最佳類別",
-        "about_app": "關於此應用程式",
-        "model_performance": "模型性能指標",
-        "select_file": "選擇要分類的檔案",
-        "choose_language": "選擇語言 / Choose Language / 언어 선택",
-        "start_info": "請上載一個或多個.wav檔案開始使用。",
-        "mic_start_info": "點擊上方按鈕開始錄音。",
-        "model_desc_rf": "隨機森林：透過結合多個簡單決策來作出最終決定的方法",
-        "model_desc_svm": "支持向量機：尋找分隔不同數據組的邊界線的方法"
+        "test_file": "🎧 測試檔案：",
+        "download": "⬇️ 下載測試 .wav 檔案",
+        "prediction": "🎶 預測的類型：",
+        "prob": "### 🔍 預測機率",
+        "mfcc": "顯示 MFCC 熱圖",
+        "mel": "顯示 Mel 頻譜圖",
+        "mfcc_title": "MFCC 特徵",
+        "mel_title": "Mel 頻譜圖",
+        "error": "❌ 預測時發生錯誤",
+        "upload_prompt": "請上傳 .wav 檔案以開始。",
+        "no_file": "未找到測試用的 .wav 檔案。",
+        "change_test": "🔄 更換測試檔案"
     },
     "ja": {
         "language_name": "日本語 (Japanese-일본어)",
-        "title": "音楽ジャンル分類器",
-        "upload": "1つ以上の.wavファイルをアップロードしてください",
+        "title": "🎵 音楽ジャンル分類器（CNN対応）",
+        "upload": ".wavファイルをアップロード",
         "select_model": "モデルを選択",
-        "download_rf": "⬇️ ランダムフォレスト分類レポートをダウンロード",
-        "download_svm": "⬇️ SVM分類レポートをダウンロード",
-        "show_heatmap_mic": "MFCCヒートマップを表示（マイク入力）",
-        "mfcc_heatmap_title_mic": "MFCC 特徴（マイク入力）",
-        "predicted_genre": "予測されたジャンル",
-        "show_heatmap": "MFCCヒートマップを表示",
-        "accuracy_summary": "モデルの精度概要",
-        "accuracy_rf": "ランダムフォレストの精度",
-        "accuracy_svm": "SVMの精度",
-        "best_genres": "最も性能が良いジャンル",
-        "about_app": "このアプリについて",
-        "model_performance": "モデルパフォーマンス指標",
-        "select_file": "分類するファイルを選択",
-        "choose_language": "言語を選択 / Choose Language / 언어 선택",
-        "start_info": "開始するには1つ以上の.wavファイルをアップロードしてください。",
-        "mic_start_info": "録音を開始するには上のボタンをクリックしてください。",
-        "model_desc_rf": "ランダムフォレスト：多数の単純な判断を組み合わせて最終決定を行う方法",
-        "model_desc_svm": "SVM：異なるデータ群を分ける境界線を見つける方法"
+        "test_file": "🎧 テストファイル：",
+        "download": "⬇️ テスト用 .wav ファイルをダウンロード",
+        "prediction": "🎶 予測されたジャンル：",
+        "prob": "### 🔍 予測確率",
+        "mfcc": "MFCC ヒートマップを表示",
+        "mel": "Mel スペクトログラムを表示",
+        "mfcc_title": "MFCC 特徴",
+        "mel_title": "Mel スペクトログラム",
+        "error": "❌ 予測中にエラーが発生しました",
+        "upload_prompt": ".wav ファイルをアップロードして開始してください。",
+        "no_file": "テスト用の .wav ファイルが見つかりません。",
+        "change_test": "🔄 テストファイルを変更"
     },
     "fr": {
         "language_name": "Français (Franch-프랑스어)",
-        "title": "Classificateur de genre musical",
-        "upload": "Téléchargez un ou plusieurs fichiers .wav",
-        "select_model": "Choisir un modèle",
-        "download_rf": "⬇️ Télécharger le rapport de classification Random Forest",
-        "download_svm": "⬇️ Télécharger le rapport de classification SVM",
-        "show_heatmap_mic": "Afficher la carte thermique MFCC (entrée micro)",
-        "mfcc_heatmap_title_mic": "Caractéristiques MFCC (entrée micro)",
-        "predicted_genre": "Genre prédit",
-        "show_heatmap": "Afficher la carte thermique MFCC",
-        "accuracy_summary": "Résumé de la précision du modèle",
-        "accuracy_rf": "Précision Random Forest",
-        "accuracy_svm": "Précision SVM",
-        "best_genres": "Genres les mieux performants",
-        "about_app": "À propos de cette application",
-        "model_performance": "Mesures de performance du modèle",
-        "select_file": "Sélectionnez un fichier à classer",
-        "choose_language": "Choisir la langue / Choose Language / 언어 선택",
-        "start_info": "Veuillez télécharger un ou plusieurs fichiers .wav pour commencer.",
-        "mic_start_info": "Cliquez sur le bouton ci-dessus pour commencer l'enregistrement.",
-        "model_desc_rf": "Forêt Aléatoire : Une méthode qui prend la décision finale en combinant de nombreuses décisions simples",
-        "model_desc_svm": "SVM : Une méthode qui trouve la ligne de séparation pour distinguer différents groupes de données"
+        "title": "🎵 Classificateur de genre musical (avec support CNN)",
+        "upload": "Téléversez un fichier .wav",
+        "select_model": "Choisissez un modèle",
+        "test_file": "🎧 Fichier de test :",
+        "download": "⬇️ Télécharger le fichier .wav de test",
+        "prediction": "🎶 Genre prédit :",
+        "prob": "### 🔍 Probabilités de prédiction",
+        "mfcc": "Afficher la carte thermique MFCC",
+        "mel": "Afficher le spectrogramme Mel",
+        "mfcc_title": "Caractéristiques MFCC",
+        "mel_title": "Spectrogramme Mel",
+        "error": "❌ Erreur lors de la prédiction",
+        "upload_prompt": "Veuillez téléverser un fichier .wav pour commencer.",
+        "no_file": "Aucun fichier .wav de test trouvé.",
+        "change_test": "🔄 Changer de fichier de test"
     },
     "it": {
-        "language_name": "Italiano (Italian-이태리어)",
-        "title": "Classificatore di genere musicale",
-        "upload": "Carica uno o più file .wav",
-        "select_model": "Scegli un modello",
-        "download_rf": "⬇️ Scarica il rapporto di classificazione Random Forest",
-        "download_svm": "⬇️ Scarica il rapporto di classificazione SVM",
-        "show_heatmap_mic": "Mostra la mappa di calore MFCC (input microfono)",
-        "mfcc_heatmap_title_mic": "Caratteristiche MFCC (input microfono)",
-        "predicted_genre": "Genere previsto",
-        "show_heatmap": "Mostra la mappa di calore MFCC",
-        "accuracy_summary": "Riepilogo accuratezza modello",
-        "accuracy_rf": "Accuratezza Random Forest",
-        "accuracy_svm": "Accuratezza SVM",
-        "best_genres": "Generi con migliori prestazioni",
-        "about_app": "Informazioni su questa app",
-        "model_performance": "Metriche di prestazione del modello",
-        "select_file": "Seleziona un file da classificare",
-        "choose_language": "Scegli la lingua / Choose Language / 언어 선택",
-        "start_info": "Carica uno o più file .wav per iniziare.",
-        "mic_start_info": "Fai clic sul pulsante sopra per iniziare la registrazione.",
-        "model_desc_rf": "Random Forest: Un metodo che prende la decisione finale combinando molte decisioni semplici",
-        "model_desc_svm": "SVM: Un metodo che trova la linea di confine per separare diversi gruppi di dati"
+        "language_name": "Italiano (Italian-이탈리아어)",
+        "title": "🎵 Classificatore di generi musicali (con supporto CNN)",
+        "upload": "Carica un file .wav",
+        "select_model": "Seleziona un modello",
+        "test_file": "🎧 File di test:",
+        "download": "⬇️ Scarica file .wav di test",
+        "prediction": "🎶 Genere previsto:",
+        "prob": "### 🔍 Probabilità di previsione",
+        "mfcc": "Mostra la mappa di calore MFCC",
+        "mel": "Mostra lo spettrogramma Mel",
+        "mfcc_title": "Caratteristiche MFCC",
+        "mel_title": "Spettrogramma Mel",
+        "error": "❌ Errore durante la previsione",
+        "upload_prompt": "Carica un file .wav per iniziare.",
+        "no_file": "File .wav di test non trovato.",
+        "change_test": "🔄 Cambia file di test"
     },
     "ru": {
         "language_name": "Русский (Russian-러시아어)",
-        "title": "Классификатор музыкальных жанров",
-        "upload": "Загрузите один или несколько файлов .wav",
+        "title": "🎵 Классификатор музыкальных жанров (с поддержкой CNN)",
+        "upload": "Загрузите .wav файл",
         "select_model": "Выберите модель",
-        "download_rf": "⬇️ Скачать отчет классификации Random Forest",
-        "download_svm": "⬇️ Скачать отчет классификации SVM",
-        "show_heatmap_mic": "Показать тепловую карту MFCC (вход с микрофона)",
-        "mfcc_heatmap_title_mic": "Признаки MFCC (вход с микрофона)",
-        "predicted_genre": "Предсказанный жанр",
-        "show_heatmap": "Показать тепловую карту MFCC",
-        "accuracy_summary": "Обзор точности модели",
-        "accuracy_rf": "Точность Random Forest",
-        "accuracy_svm": "Точность SVM",
-        "best_genres": "Лучшие жанры",
-        "about_app": "Об этом приложении",
-        "model_performance": "Метрики производительности модели",
-        "select_file": "Выберите файл для классификации",
-        "choose_language": "Выберите язык / Choose Language / 언어 선택",
-        "start_info": "Пожалуйста, загрузите один или несколько файлов .wav для начала.",
-        "mic_start_info": "Нажмите кнопку выше, чтобы начать запись.",
-        "model_desc_rf": "Случайный лес: метод, который принимает окончательное решение, объединяя множество простых решений",
-        "model_desc_svm": "SVM: метод, который находит границу для разделения различных групп данных"
+        "test_file": "🎧 Тестовый файл:",
+        "download": "⬇️ Скачать тестовый .wav файл",
+        "prediction": "🎶 Предсказанный жанр:",
+        "prob": "### 🔍 Вероятности предсказания",
+        "mfcc": "Показать тепловую карту MFCC",
+        "mel": "Показать спектрограмму Mel",
+        "mfcc_title": "Признаки MFCC",
+        "mel_title": "Спектрограмма Mel",
+        "error": "❌ Ошибка при предсказании",
+        "upload_prompt": "Пожалуйста, загрузите .wav файл для начала.",
+        "no_file": "Тестовый .wav файл не найден.",
+        "change_test": "🔄 Сменить тестовый файл"
     },
     "es": {
         "language_name": "Español (Spanish-스페인어)",
-        "title": "Clasificador de Géneros Musicales",
-        "upload": "Sube uno o más archivos .wav",
-        "select_model": "Elige un modelo",
-        "download_rf": "⬇️ Descargar informe de clasificación Random Forest",
-        "download_svm": "⬇️ Descargar informe de clasificación SVM",
-        "show_heatmap_mic": "Mostrar mapa de calor MFCC (entrada de micrófono)",
-        "mfcc_heatmap_title_mic": "Características MFCC (entrada de micrófono)",
-        "predicted_genre": "Género Predicho",
-        "show_heatmap": "Mostrar mapa de calor MFCC",
-        "accuracy_summary": "Resumen de precisión del modelo",
-        "accuracy_rf": "Precisión Random Forest",
-        "accuracy_svm": "Precisión SVM",
-        "best_genres": "Géneros con mejor desempeño",
-        "about_app": "Acerca de esta aplicación",
-        "model_performance": "Métricas de desempeño del modelo",
-        "select_file": "Selecciona un archivo para clasificar",
-        "choose_language": "Elige idioma / Choose Language / 언어 선택",
-        "start_info": "Por favor, sube uno o más archivos .wav para comenzar.",
-        "mic_start_info": "Haga clic en el botón de arriba para comenzar la grabación.",
-        "model_desc_rf": "Bosque Aleatorio: Un método que toma la decisión final combinando muchas decisiones simples",
-        "model_desc_svm": "SVM: Un método que encuentra la línea límite para separar diferentes grupos de datos"
+        "title": "🎵 Clasificador de géneros musicales (con soporte CNN)",
+        "upload": "Sube un archivo .wav",
+        "select_model": "Selecciona un modelo",
+        "test_file": "🎧 Archivo de prueba:",
+        "download": "⬇️ Descargar archivo .wav de prueba",
+        "prediction": "🎶 Género predicho:",
+        "prob": "### 🔍 Probabilidades de predicción",
+        "mfcc": "Mostrar mapa de calor MFCC",
+        "mel": "Mostrar espectrograma Mel",
+        "mfcc_title": "Características MFCC",
+        "mel_title": "Espectrograma Mel",
+        "error": "❌ Error durante la predicción",
+        "upload_prompt": "Por favor, sube un archivo .wav para empezar.",
+        "no_file": "No se encontró archivo .wav de prueba.",
+        "change_test": "🔄 Cambiar archivo de prueba"
     },
     "ar": {
         "language_name": "العربية (Arabic-아랍어)",
-        "title": "مصنف نوع الموسيقى",
-        "upload": "قم بتحميل ملف أو أكثر بصيغة .wav",
+        "title": "🎵 مصنف نوع الموسيقى (بدعم من CNN)",
+        "upload": "قم بتحميل ملف .wav",
         "select_model": "اختر نموذجًا",
-        "download_rf": "⬇️ تحميل تقرير تصنيف Random Forest",
-        "download_svm": "⬇️ تحميل تقرير تصنيف SVM",
-        "show_heatmap_mic": "عرض خريطة الحرارة MFCC (إدخال الميكروفون)",
-        "mfcc_heatmap_title_mic": "ميزات MFCC (إدخال الميكروفون)",
-        "predicted_genre": "النوع المتوقع",
-        "show_heatmap": "عرض خريطة الحرارة MFCC",
-        "accuracy_summary": "ملخص دقة النموذج",
-        "accuracy_rf": "دقة Random Forest",
-        "accuracy_svm": "دقة SVM",
-        "best_genres": "أفضل الأنواع أداءً",
-        "about_app": "حول هذا التطبيق",
-        "model_performance": "مقاييس أداء النموذج",
-        "select_file": "اختر ملفًا للتصنيف",
-        "choose_language": "اختر اللغة / Choose Language / 언어 선택",
-        "start_info": "يرجى تحميل ملف واحد أو أكثر بصيغة .wav للبدء.",
-        "mic_start_info": "انقر فوق الزر أعلاه لبدء التسجيل.",
-        "model_desc_rf": "الغابة العشوائية: طريقة تتخذ القرار النهائي عن طريق دمج العديد من القرارات البسيطة",
-        "model_desc_svm": "SVM: طريقة تجد خط الحدود لفصل مجموعات البيانات المختلفة"
+        "test_file": "🎧 ملف الاختبار:",
+        "download": "⬇️ تنزيل ملف .wav للاختبار",
+        "prediction": "🎶 النوع المتوقع:",
+        "prob": "### 🔍 احتمالات التنبؤ",
+        "mfcc": "عرض خريطة الحرارة MFCC",
+        "mel": "عرض طيف Mel",
+        "mfcc_title": "ميزات MFCC",
+        "mel_title": "طيف Mel",
+        "error": "❌ خطأ أثناء التنبؤ",
+        "upload_prompt": "يرجى تحميل ملف .wav للبدء.",
+        "no_file": "لم يتم العثور على ملف .wav للاختبار.",
+        "change_test": "🔄 تغيير ملف الاختبار"
     },
     "pt": {
         "language_name": "Português (Portuguese-포르투갈어)",
-        "title": "Classificador de Gêneros Musicais",
-        "upload": "Faça upload de um ou mais arquivos .wav",
+        "title": "🎵 Classificador de Gêneros Musicais (com suporte CNN)",
+        "upload": "Envie um arquivo .wav",
         "select_model": "Escolha um modelo",
-        "download_rf": "⬇️ Baixar relatório de classificação Random Forest",
-        "download_svm": "⬇️ Baixar relatório de classificação SVM",
-        "show_heatmap_mic": "Mostrar mapa de calor MFCC (entrada do microfone)",
-        "mfcc_heatmap_title_mic": "Características MFCC (entrada do microfone)",
-        "predicted_genre": "Gênero Previsto",
-        "show_heatmap": "Mostrar mapa de calor MFCC",
-        "accuracy_summary": "Resumo de precisão do modelo",
-        "accuracy_rf": "Precisão Random Forest",
-        "accuracy_svm": "Precisão SVM",
-        "best_genres": "Melhores gêneros",
-        "about_app": "Sobre este aplicativo",
-        "model_performance": "Métricas de desempenho do modelo",
-        "select_file": "Selecione um arquivo para classificar",
-        "choose_language": "Escolha o idioma / Choose Language / 언어 선택",
-        "start_info": "Por favor, faça upload de um ou mais arquivos .wav para começar.",
-        "mic_start_info": "Clique no botão acima para começar a gravação.",
-        "model_desc_rf": "Random Forest: Um método que toma a decisão final combinando muitas decisões simples",
-        "model_desc_svm": "SVM: Um método que encontra a linha de fronteira para separar diferentes grupos de dados"
+        "test_file": "🎧 Arquivo de teste:",
+        "download": "⬇️ Baixar arquivo .wav de teste",
+        "prediction": "🎶 Gênero previsto:",
+        "prob": "### 🔍 Probabilidades de previsão",
+        "mfcc": "Mostrar mapa de calor MFCC",
+        "mel": "Mostrar espectrograma Mel",
+        "mfcc_title": "Características MFCC",
+        "mel_title": "Espectrograma Mel",
+        "error": "❌ Erro durante a previsão",
+        "upload_prompt": "Por favor, envie um arquivo .wav para começar.",
+        "no_file": "Arquivo .wav de teste não encontrado.",
+        "change_test": "🔄 Alterar arquivo de teste"
     },
     "vi": {
         "language_name": "Tiếng Việt (Vietnamese-베트남어)",
-        "title": "Bộ Phân Loại Thể Loại Nhạc",
-        "upload": "Tải lên một hoặc nhiều file .wav",
+        "title": "🎵 Bộ phân loại thể loại nhạc (hỗ trợ CNN)",
+        "upload": "Tải lên tệp .wav",
         "select_model": "Chọn mô hình",
-        "download_rf": "⬇️ Tải xuống báo cáo phân loại Random Forest",
-        "download_svm": "⬇️ Tải xuống báo cáo phân loại SVM",
-        "show_heatmap_mic": "Hiển thị bản đồ nhiệt MFCC (đầu vào micrô)",
-        "mfcc_heatmap_title_mic": "Đặc trưng MFCC (đầu vào micrô)",
-        "predicted_genre": "Thể loại dự đoán",
-        "show_heatmap": "Hiển thị bản đồ nhiệt MFCC",
-        "accuracy_summary": "Tóm tắt độ chính xác mô hình",
-        "accuracy_rf": "Độ chính xác Random Forest",
-        "accuracy_svm": "Độ chính xác SVM",
-        "best_genres": "Thể loại hoạt động tốt nhất",
-        "about_app": "Về ứng dụng này",
-        "model_performance": "Chỉ số hiệu suất mô hình",
-        "select_file": "Chọn tệp để phân loại",
-        "choose_language": "Chọn ngôn ngữ / Choose Language / 언어 선택",
-        "start_info": "Vui lòng tải lên một hoặc nhiều tệp .wav để bắt đầu.",
-        "mic_start_info": "Nhấp vào nút ở trên để bắt đầu ghi âm.",
-        "model_desc_rf": "Rừng ngẫu nhiên: Phương pháp đưa ra quyết định cuối cùng bằng cách kết hợp nhiều quyết định đơn giản",
-        "model_desc_svm": "SVM: Phương pháp tìm đường biên để phân tách các nhóm dữ liệu khác nhau"
+        "test_file": "🎧 Tệp kiểm tra:",
+        "download": "⬇️ Tải xuống tệp .wav kiểm tra",
+        "prediction": "🎶 Thể loại dự đoán:",
+        "prob": "### 🔍 Xác suất dự đoán",
+        "mfcc": "Hiển thị bản đồ nhiệt MFCC",
+        "mel": "Hiển thị phổ Mel",
+        "mfcc_title": "Đặc trưng MFCC",
+        "mel_title": "Phổ Mel",
+        "error": "❌ Lỗi trong quá trình dự đoán",
+        "upload_prompt": "Vui lòng tải lên tệp .wav để bắt đầu.",
+        "no_file": "Không tìm thấy tệp .wav kiểm tra.",
+        "change_test": "🔄 Đổi tệp kiểm tra khác"
     },
     "tr": {
         "language_name": "Türkçe (Turkish-튀르키예어)",
-        "title": "Müzik Türü Sınıflandırıcı",
-        "upload": "Bir veya daha fazla .wav dosyası yükleyin",
+        "title": "🎵 Müzik Türü Sınıflandırıcı (CNN desteği ile)",
+        "upload": ".wav dosyası yükleyin",
         "select_model": "Bir model seçin",
-        "download_rf": "⬇️ Random Forest Sınıflandırma Raporunu İndir",
-        "download_svm": "⬇️ SVM Sınıflandırma Raporunu İndir",
-        "show_heatmap_mic": "MFCC Isı Haritasını Göster (Mikrofon Girişi)",
-        "mfcc_heatmap_title_mic": "MFCC Özellikleri (Mikrofon Girişi)",
-        "predicted_genre": "Tahmin Edilen Tür",
-        "show_heatmap": "MFCC Isı Haritasını",
-        "accuracy_summary": "Model doğruluk özeti",
-        "accuracy_rf": "Random Forest doğruluğu",
-        "accuracy_svm": "SVM doğruluğu",
-        "best_genres": "En iyi performans gösteren türler",
-        "about_app": "Bu uygulama hakkında",
-        "model_performance": "Model performans ölçütleri",
-        "select_file": "Sınıflandırmak için bir dosya seçin",
-        "choose_language": "Dil seçin / Choose Language / 언어 선택",
-        "start_info": "Başlamak için bir veya daha fazla .wav dosyası yükleyin.",
-        "mic_start_info": "Kayda başlamak için yukarıdaki düğmeye tıklayın.",
-        "model_desc_rf": "Random Forest: Birçok basit kararı birleştirerek nihai kararı veren yöntem",
-        "model_desc_svm": "SVM: Farklı veri gruplarını ayıran sınır çizgisini bulan yöntem"
+        "test_file": "🎧 Test dosyası:",
+        "download": "⬇️ Test .wav dosyasını indir",
+        "prediction": "🎶 Tahmin Edilen Tür:",
+        "prob": "### 🔍 Tahmin Olasılıkları",
+        "mfcc": "MFCC Isı Haritasını Göster",
+        "mel": "Mel Spektrogramını Göster",
+        "mfcc_title": "MFCC Özellikleri",
+        "mel_title": "Mel Spektrogramı",
+        "error": "❌ Tahmin sırasında hata oluştu",
+        "upload_prompt": "Başlamak için lütfen bir .wav dosyası yükleyin.",
+        "no_file": "Test .wav dosyası bulunamadı.",
+        "change_test": "🔄 Test dosyasını değiştir"
     },
 }
 
@@ -451,29 +325,40 @@ lang_dict = {
 genre_labels = ['blues', 'classical', 'country', 'disco', 'hiphop',
                 'jazz', 'metal', 'pop', 'reggae', 'rock']
 
-# --- 설정 상수 ---
-BASE_PATH = ""
-MODEL_FILES = {
-    "Random Forest": "rf_model.pkl",
-    "SVM": "svm_model.pkl",
-    "CNN": "cnn_genre_model.keras"
-}
-REPORT_FILES = {
-    "Random Forest": "rf_classification_report.csv",
-    "SVM": "svm_classification_report.csv"
-}
-SCALER_FILE = "scaler.pkl"
-LABEL_ENCODER_FILE = "label_encoder.pkl"
-SAMPLE_AUDIO_FILE = "sample.wav"
-N_MFCC = 13
+# --- 상태 초기화 ---
+if "refresh_sample" not in st.session_state:
+    st.session_state.refresh_sample = False
 
-# --- 유틸 함수 ---
+# --- 언어 선택 ---
+selected_lang = st.sidebar.selectbox("Language / 언어", options=list(lang_dict.keys()), format_func=lambda x: lang_dict[x]["language_name"])
+texts = lang_dict[selected_lang]
+
+# --- 무작위 wav 파일 선택 ---
+def pick_random_wav_file(base_dir="/content/gtzan_data/Data/genres_original"):
+    genres = [g for g in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, g))]
+    random_genre = random.choice(genres)
+    genre_path = os.path.join(base_dir, random_genre)
+    wav_files = [f for f in os.listdir(genre_path) if f.endswith(".wav")]
+    if not wav_files:
+        return None, None
+    random_file = random.choice(wav_files)
+    return os.path.join(genre_path, random_file), f"{random_genre} - {random_file}"
+
+# --- 오디오 다운로드 링크 생성 ---
+def get_audio_download_link(file_path, label):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    return f'<a href="data:audio/wav;base64,{b64}" download="test_sample.wav">{label}</a>'
+
+# --- CNN 모델 로드 ---
 @st.cache_resource
 def load_cnn_model():
     model = tf.keras.models.load_model(MODEL_FILES["CNN"], compile=False)
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# --- 기존 모델 로드 ---
 def load_model_files(model_name: str):
     model_path = os.path.join(BASE_PATH, MODEL_FILES[model_name])
     scaler_path = os.path.join(BASE_PATH, SCALER_FILE)
@@ -494,124 +379,60 @@ def load_model_files(model_name: str):
 
     return model, scaler, label_encoder, report_df, report_data, report_path
 
+# --- 특징 추출 함수들 ---
 def extract_features(audio_bytes, n_mfcc):
     y, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
-    mfcc_mean = np.mean(mfcc, axis=1)
-    mfcc_std = np.std(mfcc, axis=1)
-    features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
-    return features, mfcc
-
-def load_cnn_model():
-    model = tf.keras.models.load_model(MODEL_FILES["CNN"], compile=False)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    return model
+    return np.concatenate([np.mean(mfcc, axis=1), np.std(mfcc, axis=1)]).reshape(1, -1), mfcc
 
 def extract_mel_spectrogram(audio_bytes, max_len=128):
     y, sr = librosa.load(BytesIO(audio_bytes), sr=22050)
     mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
     mel_db = librosa.power_to_db(mel, ref=np.max)
-
-    if mel_db.shape[1] > max_len:
-        mel_db = mel_db[:, :max_len]
-    else:
-        pad_width = max_len - mel_db.shape[1]
-        mel_db = np.pad(mel_db, pad_width=((0, 0), (0, pad_width)), mode='constant')
-
+    pad_width = max(0, max_len - mel_db.shape[1])
+    mel_db = np.pad(mel_db, ((0, 0), (0, pad_width)), mode='constant') if pad_width > 0 else mel_db[:, :max_len]
     return mel_db[np.newaxis, ..., np.newaxis], mel_db
 
+# --- 클래스 라벨 정렬 확인 ---
 def check_class_alignment(model, label_encoder):
     try:
-        model_classes = label_encoder.inverse_transform(model.classes_)
+        return label_encoder.inverse_transform(model.classes_)
     except Exception:
-        model_classes = label_encoder.classes_
-    return model_classes
+        return label_encoder.classes_
 
-# --- 앱 시작 ---
+# --- 상수 설정 ---
+BASE_PATH = ""
+N_MFCC = 13
+SAMPLE_AUDIO_FILE = "sample.wav"
+MODEL_FILES = {"Random Forest": "rf_model.pkl", "SVM": "svm_model.pkl", "CNN": "cnn_genre_model.keras"}
+REPORT_FILES = {"Random Forest": "rf_classification_report.csv", "SVM": "svm_classification_report.csv"}
+SCALER_FILE = "scaler.pkl"
+LABEL_ENCODER_FILE = "label_encoder.pkl"
+genre_labels = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+
+# --- Streamlit UI 시작 ---
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
-st.title("🎵 Music Genre Classifier (with CNN Support)")
+st.title(texts["title"])
 
-model_option = st.selectbox("Choose a model", list(MODEL_FILES.keys()))
+model_option = st.selectbox(texts["select_model"], list(MODEL_FILES.keys()))
 
-# 🔁 새로고침 버튼 (사이드바에 표시)
-if st.sidebar.button("🔄 다른 테스트 파일로 바꾸기"):
-    st.session_state.refresh_sample = not st.session_state.refresh_sample  # 상태 토글
+if st.sidebar.button(texts["change_test"]):
+    st.session_state.refresh_sample = not st.session_state.refresh_sample
 
-# 🎧 무작위 wav 선택
 sample_path, sample_name = pick_random_wav_file()
-
-# 📥 다운로드 버튼 표시
-st.sidebar.markdown("---")
 if sample_path:
-    st.sidebar.markdown(f"🎧 테스트용 파일: `{sample_name}`")
-    st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
+    st.sidebar.markdown(f"{texts['test_file']} `{sample_name}`")
+    st.sidebar.markdown(get_audio_download_link(sample_path, texts['download']), unsafe_allow_html=True)
 else:
-    st.sidebar.warning("테스트용 .wav 파일을 찾을 수 없습니다.")
-
-# --- 사이드바에 테스트용 다운로드 버튼 표시 ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("📁 테스트용 파일:")
-sample_path = "/content/gtzan_data/Data/genres_original/jazz/jazz.00011.wav"
-st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
+    st.sidebar.warning(texts["no_file"])
 
 if model_option == "CNN":
-    cnn_model = load_cnn_model()
+    model = load_cnn_model()
 else:
-    model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
+    model, scaler, label_encoder, _, _, _ = load_model_files(model_option)
     model_classes = check_class_alignment(model, label_encoder)
 
-# --- 사이드바: 무작위 .wav 다운로드 ---
-sample_path, sample_name = pick_random_wav_file()
-
-st.sidebar.markdown("---")
-if sample_path:
-    st.sidebar.markdown(f"🎧 테스트용 파일: `{sample_name}`")
-    st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
-else:
-    st.sidebar.warning("테스트용 .wav 파일을 찾을 수 없습니다.")
-
-uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"]), accept_multiple_files=False)
-
-if uploaded_files is not None:
-    file = uploaded_files
-    audio_bytes = file.read()
-
-    if model_option == "CNN":
-        # Mel Spectrogram 추출
-        features, mel = extract_mel_spectrogram(audio_bytes)
-
-        # CNN 예측
-        prediction = cnn_model.predict(features)
-        predicted_index = np.argmax(prediction)
-        predicted_label = genre_labels[predicted_index]
-
-        # 🎧 결과 출력
-        st.success(f"🎶 예측된 장르: `{predicted_label.capitalize()}`")
-
-        # 확률 시각화
-        st.markdown("### 🔍 예측 확률")
-        proba_dict = dict(zip(genre_labels, prediction[0]))
-        st.bar_chart(proba_dict)
-
-        # 히트맵
-        if st.checkbox("🎼 Mel Spectrogram 보기"):
-            fig, ax = plt.subplots(figsize=(8, 4))
-            sns.heatmap(mel, cmap="YlGnBu", ax=ax)
-            ax.set_title("Mel Spectrogram")
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Mel Bands")
-            st.pyplot(fig)
-            plt.close(fig)
-
-    else:
-        # 기존 모델 처리 로직 (Random Forest, SVM)
-        features, mfcc = extract_features(audio_bytes, n_mfcc=13)
-        features_scaled = scaler.transform(features)
-        prediction = model.predict(features_scaled)
-        predicted_label = label_encoder.inverse_transform(prediction)[0]
-
-        st.success(f"🎶 예측된 장르: `{predicted_label.capitalize()}`")
-        # 기타 기존 기능 (히트맵, 확률 등)
+uploaded_file = st.file_uploader(texts["upload"], type=["wav"])
 
 if uploaded_file:
     audio_bytes = uploaded_file.read()
@@ -623,18 +444,14 @@ if uploaded_file:
         predicted_index = np.argmax(prediction)
         predicted_label = genre_labels[predicted_index]
 
-        st.success(f"🎶 Predicted Genre: `{predicted_label.capitalize()}`")
+        st.success(f"{texts['prediction']} `{predicted_label.capitalize()}`")
+        st.markdown(texts["prob"])
+        st.bar_chart(dict(zip(genre_labels, prediction[0])))
 
-        st.markdown("### 🔍 Prediction Probabilities")
-        proba_dict = dict(zip(genre_labels, prediction[0]))
-        st.bar_chart(proba_dict)
-
-        if st.checkbox("Show Mel Spectrogram"):
+        if st.checkbox(texts["mel"]):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mel, cmap="YlGnBu", ax=ax)
-            ax.set_title("Mel Spectrogram")
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Mel Bands")
+            ax.set(title=texts["mel_title"], xlabel="Time", ylabel="Mel Bands")
             st.pyplot(fig)
             plt.close(fig)
 
@@ -644,27 +461,23 @@ if uploaded_file:
             features_scaled = scaler.transform(features)
             prediction_encoded = model.predict(features_scaled)
             prediction = label_encoder.inverse_transform(prediction_encoded)
-            st.success(f"🎶 Predicted Genre: `{prediction[0].capitalize()}`")
+
+            st.success(f"{texts['prediction']} `{prediction[0].capitalize()}`")
 
             if hasattr(model, "predict_proba"):
                 proba = model.predict_proba(features_scaled)[0]
-                proba_dict = dict(zip(model_classes, proba))
-                st.markdown("### 🔍 Prediction Probabilities")
-                st.bar_chart(proba_dict)
+                st.markdown(texts["prob"])
+                st.bar_chart(dict(zip(model_classes, proba)))
 
-            if st.checkbox("Show MFCC Heatmap"):
+            if st.checkbox(texts["mfcc"]):
                 fig, ax = plt.subplots(figsize=(8, 4))
                 sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-                ax.set_title("MFCC Features")
-                ax.set_xlabel("Time")
-                ax.set_ylabel("MFCC Coefficients")
+                ax.set(title=texts["mfcc_title"], xlabel="Time", ylabel="MFCC Coefficients")
                 st.pyplot(fig)
                 plt.close(fig)
 
         except Exception as e:
-            st.error("❌ Error during prediction.")
+            st.error(texts["error"])
             st.exception(e)
 else:
-    st.info("Please upload a .wav file to get started.")
-
-
+    st.info(texts["upload_prompt"])
