@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import base64
-import tempfile  # 임시 파일 처리를 위한 모듈 (For temporary file handling)
-import soundfile as sf  # 오디오 파일 읽고 쓰기용 (For reading/writing audio files)
+import tempfile
+import soundfile as sf
+from io import BytesIO
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -446,15 +447,23 @@ texts = lang_dict[language_code]
 # 페이지 설정
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
-# 모델 선택
-model_option = st.radio("Choose a model", ("Random Forest", "SVM"))
-model_file = "model.pkl" if model_option == "Random Forest" else "svm_model.pkl"
-model = joblib.load(model_file)
+# 모델 선택 및 로딩
+model_option = st.radio(_["select_model"], ("Random Forest", "SVM"))
+
+if model_option == "Random Forest":
+    model = joblib.load("model.pkl")
+    n_mfcc = 29
+    report_file = "rf_classification_report.csv"
+elif model_option == "SVM":
+    model = joblib.load("svm_model.pkl")
+    n_mfcc = 13
+    report_file = "svm_classification_report.csv"
+
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
 # 리포트 불러오기
-report_path = "rf_classification_report.csv" if model_option == "Random Forest" else "svm_classification_report.csv"
+report_path = report_file
 with open(report_path, "rb") as f:
     report_data = f.read()
 report_df = pd.read_csv(report_path, index_col=0)
@@ -476,7 +485,7 @@ with open("sample.wav", "rb") as audio_file:
     Features: 13 or 29 MFCCs (mean + std)  
     Accuracy: ~64% (RF) / ~61% (SVM)
     """)
-    st.sidebar.download_button("⬇️ Download Classification Report", report_data, file_name=report_path, mime="text/csv")
+    st.sidebar.download_button(_["download_rf"] if model_option == "Random Forest" else _["download_svm"], report_data, file_name=report_path, mime="text/csv")
     st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
 
 # 모델 성능 시각화
@@ -489,7 +498,7 @@ with st.expander("📊 Model Performance Metrics"):
     st.pyplot(fig)
 
 # 파일 업로드 및 처리
-uploaded_files = st.file_uploader("Upload one or more .wav files", type=["wav"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(_["upload"], type=["wav"], accept_multiple_files=True)
 if uploaded_files:
     filenames = [file.name for file in uploaded_files]
     selected_file = st.selectbox("Select a file to classify", filenames)
@@ -500,8 +509,6 @@ if uploaded_files:
         st.audio(audio_bytes, format='audio/wav')
         file_obj.seek(0)
 
-        # ✅ 모델에 따라 MFCC 개수 다르게 설정
-        n_mfcc = 13 if model_option == "SVM" else 29
         y, sr = librosa.load(file_obj)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
         mfcc_mean = np.mean(mfcc, axis=1)
@@ -541,47 +548,3 @@ if uploaded_files:
         st.exception(e)
 else:
     st.info("Please upload one or more .wav files to get started.")
-
-# 마이크 입력 (로컬에서만 작동)
-st.markdown("## 🎤 Real-Time Mic Recording")
-if st.secrets.get("IS_LOCAL", False):
-    try:
-        from streamlit_audio_recorder import audio_recorder
-        audio_bytes = audio_recorder()
-        if audio_bytes:
-            st.audio(audio_bytes, format="audio/wav")
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-                tmpfile.write(audio_bytes)
-                tmpfile_path = tmpfile.name
-
-            n_mfcc = 13 if model_option == "SVM" else 29
-            y, sr = librosa.load(tmpfile_path)
-            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
-            mfcc_mean = np.mean(mfcc, axis=1)
-            mfcc_std = np.std(mfcc, axis=1)
-            features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
-            features_scaled = scaler.transform(features)
-
-            prediction_encoded = model.predict(features_scaled)
-            prediction = label_encoder.inverse_transform(prediction_encoded)[0]
-            st.success(f"🎶 Predicted Genre (Mic): `{prediction.capitalize()}`")
-
-            if hasattr(model, "predict_proba"):
-                proba = model.predict_proba(features_scaled)[0]
-                classes = label_encoder.inverse_transform(model.classes_)
-                proba_dict = dict(zip(classes, proba))
-                st.bar_chart(proba_dict)
-
-            if st.checkbox("Show MFCC Heatmap (Mic Input)"):
-                fig, ax = plt.subplots(figsize=(8, 4))
-                sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-                ax.set_title("MFCC Features (Mic Input)")
-                ax.set_xlabel("Time")
-                ax.set_ylabel("MFCC Coefficients")
-                st.pyplot(fig)
-        else:
-            st.info("Click the button above to start recording.")
-    except Exception as e:
-        st.error(f"⚠️ Mic processing error: {e}")
-else:
-    st.info("🔇 Real-time mic recording is not supported in this version. Please upload a .wav file instead.")
