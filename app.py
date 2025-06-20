@@ -6,8 +6,34 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import os
+import base64
+import random
 from io import BytesIO
 import tensorflow as tf
+
+if "refresh_sample" not in st.session_state:
+    st.session_state.refresh_sample = False
+
+
+def pick_random_wav_file(base_dir="/content/gtzan_data/Data/genres_original"):
+    genres = [g for g in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, g))]
+    random_genre = random.choice(genres)
+    genre_path = os.path.join(base_dir, random_genre)
+    wav_files = [f for f in os.listdir(genre_path) if f.endswith(".wav")]
+
+    if not wav_files:
+        return None, None
+
+    random_file = random.choice(wav_files)
+    full_path = os.path.join(genre_path, random_file)
+    return full_path, f"{random_genre} - {random_file}"
+
+def get_audio_download_link(file_path, label="⬇️ 테스트용 .wav 파일 다운로드"):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    href = f'<a href="data:audio/wav;base64,{b64}" download="test_sample.wav">{label}</a>'
+    return href
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -507,11 +533,42 @@ st.title("🎵 Music Genre Classifier (with CNN Support)")
 
 model_option = st.selectbox("Choose a model", list(MODEL_FILES.keys()))
 
+# 🔁 새로고침 버튼 (사이드바에 표시)
+if st.sidebar.button("🔄 다른 테스트 파일로 바꾸기"):
+    st.session_state.refresh_sample = not st.session_state.refresh_sample  # 상태 토글
+
+# 🎧 무작위 wav 선택
+sample_path, sample_name = pick_random_wav_file()
+
+# 📥 다운로드 버튼 표시
+st.sidebar.markdown("---")
+if sample_path:
+    st.sidebar.markdown(f"🎧 테스트용 파일: `{sample_name}`")
+    st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
+else:
+    st.sidebar.warning("테스트용 .wav 파일을 찾을 수 없습니다.")
+
+# --- 사이드바에 테스트용 다운로드 버튼 표시 ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("📁 테스트용 파일:")
+sample_path = "/content/gtzan_data/Data/genres_original/jazz/jazz.00011.wav"
+st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
+
 if model_option == "CNN":
     cnn_model = load_cnn_model()
 else:
     model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
     model_classes = check_class_alignment(model, label_encoder)
+
+# --- 사이드바: 무작위 .wav 다운로드 ---
+sample_path, sample_name = pick_random_wav_file()
+
+st.sidebar.markdown("---")
+if sample_path:
+    st.sidebar.markdown(f"🎧 테스트용 파일: `{sample_name}`")
+    st.sidebar.markdown(get_audio_download_link(sample_path), unsafe_allow_html=True)
+else:
+    st.sidebar.warning("테스트용 .wav 파일을 찾을 수 없습니다.")
 
 uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"]), accept_multiple_files=False)
 
