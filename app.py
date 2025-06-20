@@ -421,9 +421,9 @@ lang_dict = {
 }
 
 # --- 설정 상수 ---
-BASE_PATH = ""  # 경로 변경시 여기만 수정
+BASE_PATH = ""  # 모델 및 파일 위치에 맞게 수정하세요
 MODEL_FILES = {
-    "Random Forest": "model.pkl",  # 여기만 수정
+    "Random Forest": "model.pkl",  # 변경 시 경로와 파일명 일치하도록 수정
     "SVM": "svm_model.pkl"
 }
 REPORT_FILES = {
@@ -433,7 +433,7 @@ REPORT_FILES = {
 SCALER_FILE = "scaler.pkl"
 LABEL_ENCODER_FILE = "label_encoder.pkl"
 SAMPLE_AUDIO_FILE = "sample.wav"
-N_MFCC = 13  # MFCC 개수 (mean+std 해서 총 26 feature)
+N_MFCC = 13  # MFCC 개수 (mean + std 합쳐서 26개)
 
 # --- 유틸 함수 ---
 def load_model_files(model_name: str):
@@ -442,7 +442,6 @@ def load_model_files(model_name: str):
     label_enc_path = os.path.join(BASE_PATH, LABEL_ENCODER_FILE)
     report_path = os.path.join(BASE_PATH, REPORT_FILES[model_name])
 
-    # 파일 존재 여부 체크
     for path in [model_path, scaler_path, label_enc_path, report_path]:
         if not os.path.isfile(path):
             st.error(f"Required file not found: {path}")
@@ -458,8 +457,7 @@ def load_model_files(model_name: str):
     return model, scaler, label_encoder, report_df, report_data, report_path
 
 def extract_features(audio_bytes, n_mfcc):
-    # BytesIO로 감싸 librosa.load에 전달, sr=None으로 원본 샘플링레이트 유지
-    y, sr = librosa.load(BytesIO(audio_bytes), sr=None)
+    y, sr = librosa.load(BytesIO(audio_bytes), sr=None)  # 원본 샘플링레이트 유지
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
     mfcc_mean = np.mean(mfcc, axis=1)
     mfcc_std = np.std(mfcc, axis=1)
@@ -467,16 +465,22 @@ def extract_features(audio_bytes, n_mfcc):
     return features, mfcc
 
 def check_class_alignment(model, label_encoder):
-    # 모델 클래스와 라벨 인코더 클래스 일치 여부 확인
-    model_classes = label_encoder.inverse_transform(model.classes_)
-    label_enc_classes = label_encoder.classes_
-    if not np.array_equal(model_classes, label_enc_classes):
+    try:
+        model_classes = label_encoder.inverse_transform(model.classes_)
+    except Exception as e:
+        st.error(f"Error in inverse transforming model.classes_: {e}")
+        model_classes = model.classes_
+
+    if not np.array_equal(model_classes, label_encoder.classes_):
         st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
+        st.warning(f"Model classes (inverse transformed): {model_classes}")
+        st.warning(f"Label Encoder classes: {label_encoder.classes_}")
+
     return model_classes
 
 # --- 앱 시작 ---
 
-# 페이지 설정 (최상단 위치 권장)
+# 페이지 설정 (최상단 권장)
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
 # 언어 선택 UI
@@ -491,7 +495,7 @@ model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
 # 모델 및 관련 파일 로딩
 model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
 
-# 모델 클래스와 레이블 인코더 클래스 일치 확인
+# 클래스 정합성 체크
 model_classes = check_class_alignment(model, label_encoder)
 
 # UI: 제목 및 안내
@@ -554,7 +558,6 @@ if uploaded_files:
             audio_bytes = file_obj.read()
             st.audio(audio_bytes, format="audio/wav")
 
-            # 추출 단계별로 예외 처리 분리
             try:
                 features, mfcc = extract_features(audio_bytes, N_MFCC)
             except Exception as e:
