@@ -476,6 +476,11 @@ def extract_features(audio_bytes, n_mfcc):
     features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
     return features, mfcc
 
+def load_cnn_model():
+    model = tf.keras.models.load_model(MODEL_FILES["CNN"], compile=False)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
 def extract_mel_spectrogram(audio_bytes, max_len=128):
     y, sr = librosa.load(BytesIO(audio_bytes), sr=22050)
     mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
@@ -503,12 +508,53 @@ st.title("🎵 Music Genre Classifier (with CNN Support)")
 model_option = st.selectbox("Choose a model", list(MODEL_FILES.keys()))
 
 if model_option == "CNN":
-    model = load_cnn_model()
+    cnn_model = load_cnn_model()
 else:
     model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
     model_classes = check_class_alignment(model, label_encoder)
 
-uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"])
+uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"]), accept_multiple_files=False)
+
+if uploaded_files is not None:
+    file = uploaded_files
+    audio_bytes = file.read()
+
+    if model_option == "CNN":
+        # Mel Spectrogram 추출
+        features, mel = extract_mel_spectrogram(audio_bytes)
+
+        # CNN 예측
+        prediction = cnn_model.predict(features)
+        predicted_index = np.argmax(prediction)
+        predicted_label = genre_labels[predicted_index]
+
+        # 🎧 결과 출력
+        st.success(f"🎶 예측된 장르: `{predicted_label.capitalize()}`")
+
+        # 확률 시각화
+        st.markdown("### 🔍 예측 확률")
+        proba_dict = dict(zip(genre_labels, prediction[0]))
+        st.bar_chart(proba_dict)
+
+        # 히트맵
+        if st.checkbox("🎼 Mel Spectrogram 보기"):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.heatmap(mel, cmap="YlGnBu", ax=ax)
+            ax.set_title("Mel Spectrogram")
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Mel Bands")
+            st.pyplot(fig)
+            plt.close(fig)
+
+    else:
+        # 기존 모델 처리 로직 (Random Forest, SVM)
+        features, mfcc = extract_features(audio_bytes, n_mfcc=13)
+        features_scaled = scaler.transform(features)
+        prediction = model.predict(features_scaled)
+        predicted_label = label_encoder.inverse_transform(prediction)[0]
+
+        st.success(f"🎶 예측된 장르: `{predicted_label.capitalize()}`")
+        # 기타 기존 기능 (히트맵, 확률 등)
 
 if uploaded_file:
     audio_bytes = uploaded_file.read()
