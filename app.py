@@ -5,11 +5,7 @@ import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import base64
-import tempfile
 import soundfile as sf
-import os
-from io import BytesIO
 
 # --- 다국어 딕셔너리 (Languages dictionary) ---
 lang_dict = {
@@ -423,16 +419,18 @@ lang_dict = {
     },
 }
 
-# 2. 언어 선택 로직
-language_names = [lang_dict[code]["language_name"] for code in lang_dict.keys()]
-selected_language_name = st.sidebar.selectbox("Choose Language / 언어 선택", options=language_names)
-language_code = list(lang_dict.keys())[language_names.index(selected_language_name)]
-texts = lang_dict[language_code]  # ✅ texts가 여기서 정의됨
+# 언어 선택
+language_names = [v["language_name"] for v in lang_dict.values()]
+selected_language = st.sidebar.selectbox("Choose Language / 언어 선택", language_names)
+language_code = list(lang_dict.keys())[language_names.index(selected_language)]
+texts = lang_dict[language_code]
 
-# 3. 이 다음부터 사용해야 함
+# 페이지 설정
+st.set_page_config(page_title="Music Genre Classifier", layout="centered")
+
+# 모델 선택
 model_option = st.radio(texts["select_model"], ("Random Forest", "SVM"))
 
-# 4. 모델 설정
 if model_option == "Random Forest":
     model = joblib.load("model.pkl")
     n_mfcc = 29
@@ -445,28 +443,24 @@ elif model_option == "SVM":
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-# 리포트 불러오기
+# 리포트 로딩
 with open(report_file, "rb") as f:
     report_data = f.read()
 report_df = pd.read_csv(report_file, index_col=0)
 report_metrics = report_df.loc[:, ["precision", "recall", "f1-score"]]
 
-# 앱 제목
-st.markdown(f"""
-<h1 style='text-align: center; color: #FF4B4B;'>🎵 {texts['title']}</h1>
-<p style='text-align: center;'>{texts['upload']}</p>
-<hr>
-""", unsafe_allow_html=True)
+# 제목 표시
+st.markdown(f"<h1 style='text-align:center;color:#FF4B4B;'>🎵 {texts['title']}</h1><p style='text-align:center;'>{texts['upload']}</p><hr>", unsafe_allow_html=True)
 
 # 사이드바 정보
-with open("sample.wav", "rb") as audio_file:
+with open("sample.wav", "rb") as sample_audio:
     st.sidebar.header(texts["about_app"])
     st.sidebar.markdown(f"""
-    **Created by Suhwa Seong**  
-    {texts['select_model']}: {model_option}  
-    Features: 13 or 29 MFCCs (mean + std)  
-    {texts['accuracy_rf']}: ~64%  
-    {texts['accuracy_svm']}: ~61%
+**Created by Suhwa Seong**  
+{texts['select_model']}: {model_option}  
+Features: {n_mfcc * 2} (mean + std)  
+{texts['accuracy_rf']}: ~64%  
+{texts['accuracy_svm']}: ~61%
     """)
     st.sidebar.download_button(
         label=texts["download_rf"] if model_option == "Random Forest" else texts["download_svm"],
@@ -474,9 +468,9 @@ with open("sample.wav", "rb") as audio_file:
         file_name=report_file,
         mime="text/csv"
     )
-    st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
+    st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", sample_audio, file_name="sample.wav", mime="audio/wav")
 
-# 모델 성능 시각화
+# 모델 성능 지표
 with st.expander(f"📊 {texts['model_performance']}"):
     st.dataframe(report_metrics)
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -485,23 +479,23 @@ with st.expander(f"📊 {texts['model_performance']}"):
     ax.set_ylabel("Score")
     st.pyplot(fig)
 
-# 파일 업로드
+# 오디오 파일 업로드
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
+
 if uploaded_files:
-    filenames = [file.name for file in uploaded_files]
+    filenames = [f.name for f in uploaded_files]
     selected_file = st.selectbox(texts["select_file"], filenames)
-    file_obj = next(file for file in uploaded_files if file.name == selected_file)
+    file_obj = next(f for f in uploaded_files if f.name == selected_file)
 
     try:
         audio_bytes = file_obj.read()
         st.audio(audio_bytes, format='audio/wav')
         file_obj.seek(0)
-
         y, sr = librosa.load(file_obj)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
-        features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
+        features = np.concatenate([mfcc_mean, mfcc_std]).reshape(1, -1)
         features_scaled = scaler.transform(features)
 
         prediction_encoded = model.predict(features_scaled)
@@ -510,26 +504,15 @@ if uploaded_files:
 
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
-            classes_encoded = model.classes_
-            classes = label_encoder.inverse_transform(classes_encoded)
-            proba_df = pd.DataFrame({"Genre": classes, "Probability": proba})
-            proba_df = proba_df.sort_values(by="Probability", ascending=False)
+            classes = label_encoder.inverse_transform(model.classes_)
+            proba_dict = dict(zip(classes, proba))
             st.markdown("### 🔍 Prediction Probabilities")
-            fig, ax = plt.subplots()
-            sns.barplot(x="Probability", y="Genre", data=proba_df, ax=ax)
-            st.pyplot(fig)
-
-        with st.expander(texts["accuracy_summary"]):
-            st.markdown(f"""
-            - {texts['accuracy_rf']}: ~64%  
-            - {texts['accuracy_svm']}: ~61%  
-            - {texts['best_genres']}: 🎼 Classical, 🦸 Metal, 🍇 Jazz
-            """)
+            st.bar_chart(proba_dict)
 
         if st.checkbox(texts["show_heatmap"]):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
-            ax.set_title("MFCC Heatmap")
+            ax.set_title(texts["mfcc_heatmap_title_mic"])
             ax.set_xlabel("Time")
             ax.set_ylabel("MFCC Coefficients")
             st.pyplot(fig)
