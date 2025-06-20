@@ -421,9 +421,10 @@ lang_dict = {
 }
 
 # --- 설정 상수 ---
-BASE_PATH = ""  # 모델 및 파일 위치에 맞게 수정하세요
+# 구글 드라이브에 마운트한 경로 (본인의 드라이브 경로에 맞게 수정하세요)
+BASE_PATH = "/content/"
 MODEL_FILES = {
-    "Random Forest": "model.pkl",  # 변경 시 경로와 파일명 일치하도록 수정
+    "Random Forest": "rf_model.pkl",
     "SVM": "svm_model.pkl"
 }
 REPORT_FILES = {
@@ -433,7 +434,10 @@ REPORT_FILES = {
 SCALER_FILE = "scaler.pkl"
 LABEL_ENCODER_FILE = "label_encoder.pkl"
 SAMPLE_AUDIO_FILE = "sample.wav"
-N_MFCC = 13  # MFCC 개수 (mean + std 합쳐서 26개)
+N_MFCC = 13  # MFCC 개수 (mean+std 해서 총 26 feature)
+
+# 데이터셋 경로는 Colab 환경 작업공간 아래에 위치하는 것으로 분리 관리
+DATASET_PATH = "/content/gtzan_data/Data/genres_original"
 
 # --- 유틸 함수 ---
 def load_model_files(model_name: str):
@@ -457,7 +461,7 @@ def load_model_files(model_name: str):
     return model, scaler, label_encoder, report_df, report_data, report_path
 
 def extract_features(audio_bytes, n_mfcc):
-    y, sr = librosa.load(BytesIO(audio_bytes), sr=None)  # 원본 샘플링레이트 유지
+    y, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
     mfcc_mean = np.mean(mfcc, axis=1)
     mfcc_std = np.std(mfcc, axis=1)
@@ -465,22 +469,15 @@ def extract_features(audio_bytes, n_mfcc):
     return features, mfcc
 
 def check_class_alignment(model, label_encoder):
-    try:
-        model_classes = label_encoder.inverse_transform(model.classes_)
-    except Exception as e:
-        st.error(f"Error in inverse transforming model.classes_: {e}")
-        model_classes = model.classes_
-
-    if not np.array_equal(model_classes, label_encoder.classes_):
+    model_classes = label_encoder.inverse_transform(model.classes_)
+    label_enc_classes = label_encoder.classes_
+    if not np.array_equal(model_classes, label_enc_classes):
         st.warning("Warning: Model classes and Label Encoder classes do not fully match.")
-        st.warning(f"Model classes (inverse transformed): {model_classes}")
-        st.warning(f"Label Encoder classes: {label_encoder.classes_}")
-
     return model_classes
 
 # --- 앱 시작 ---
 
-# 페이지 설정 (최상단 권장)
+# 페이지 설정 (최상단 위치 권장)
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
 
 # 언어 선택 UI
@@ -495,7 +492,7 @@ model_option = st.radio(texts["select_model"], list(MODEL_FILES.keys()))
 # 모델 및 관련 파일 로딩
 model, scaler, label_encoder, report_df, report_data, report_path = load_model_files(model_option)
 
-# 클래스 정합성 체크
+# 모델 클래스와 레이블 인코더 클래스 일치 확인
 model_classes = check_class_alignment(model, label_encoder)
 
 # UI: 제목 및 안내
@@ -543,7 +540,7 @@ with st.expander(f"📊 {texts['model_performance']}"):
     ax.set_title(texts["model_performance"])
     ax.set_ylabel("Score")
     st.pyplot(fig)
-    plt.close(fig)  # 메모리 누수 방지
+    plt.close(fig)
 
 # 오디오 파일 업로드 및 처리
 uploaded_files = st.file_uploader(texts["upload"], type=["wav"], accept_multiple_files=True)
@@ -558,6 +555,7 @@ if uploaded_files:
             audio_bytes = file_obj.read()
             st.audio(audio_bytes, format="audio/wav")
 
+            # 추출 단계별로 예외 처리 분리
             try:
                 features, mfcc = extract_features(audio_bytes, N_MFCC)
             except Exception as e:
@@ -599,7 +597,7 @@ if uploaded_files:
                 ax.set_xlabel("Time")
                 ax.set_ylabel("MFCC Coefficients")
                 st.pyplot(fig)
-                plt.close(fig)  # 메모리 누수 방지
+                plt.close(fig)
 
     except Exception as e:
         st.error("Something went wrong while processing the audio file.")
