@@ -1,9 +1,9 @@
 streamlit
 librosa
-numpy
+tensorflow
 joblib
+scikit-learn
 matplotlib
 seaborn
 pandas
-gdown
-tensorflow
+gdown   
