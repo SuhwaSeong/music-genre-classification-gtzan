@@ -453,10 +453,7 @@ model = joblib.load(model_file)
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-# 모델 설명
-st.info("Random Forest: Combines multiple decisions" if model_option == "Random Forest" else "SVM: Separates with decision boundary")
-
-# 리포트 로드
+# 리포트 불러오기
 report_path = "rf_classification_report.csv" if model_option == "Random Forest" else "svm_classification_report.csv"
 with open(report_path, "rb") as f:
     report_data = f.read()
@@ -470,19 +467,19 @@ st.markdown("""
 <hr>
 """, unsafe_allow_html=True)
 
-# 사이드바 - 앱 정보
+# 사이드바 - 앱 정보 및 성능
 with open("sample.wav", "rb") as audio_file:
     st.sidebar.header("About This App")
-    st.sidebar.markdown("""
+    st.sidebar.markdown(f"""
     **Created by Suhwa Seong**  
     Model: {model_option}  
-    Features: 13 MFCCs (mean + std)  
+    Features: 13 or 29 MFCCs (mean + std)  
     Accuracy: ~64% (RF) / ~61% (SVM)
     """)
     st.sidebar.download_button("⬇️ Download Classification Report", report_data, file_name=report_path, mime="text/csv")
     st.sidebar.download_button("⬇️ Download Sample Audio (.wav)", audio_file, file_name="sample.wav", mime="audio/wav")
 
-# 본문 - 모델 성능 시각화
+# 모델 성능 시각화
 with st.expander("📊 Model Performance Metrics"):
     st.dataframe(report_metrics)
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -491,7 +488,7 @@ with st.expander("📊 Model Performance Metrics"):
     ax.set_ylabel("Score")
     st.pyplot(fig)
 
-# 파일 업로드
+# 파일 업로드 및 처리
 uploaded_files = st.file_uploader("Upload one or more .wav files", type=["wav"], accept_multiple_files=True)
 if uploaded_files:
     filenames = [file.name for file in uploaded_files]
@@ -503,8 +500,10 @@ if uploaded_files:
         st.audio(audio_bytes, format='audio/wav')
         file_obj.seek(0)
 
+        # ✅ 모델에 따라 MFCC 개수 다르게 설정
+        n_mfcc = 13 if model_option == "SVM" else 29
         y, sr = librosa.load(file_obj)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
         features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
@@ -513,10 +512,6 @@ if uploaded_files:
         prediction_encoded = model.predict(features_scaled)
         prediction = label_encoder.inverse_transform(prediction_encoded)
         st.success(f"🎶 Predicted Genre: `{prediction[0].capitalize()}`")
-
-        st.write("📌 MFCC Shape:", mfcc.shape)
-        st.write("📌 Features Shape:", features.shape)
-        st.write("📌 Prediction Encoded:", prediction_encoded)
 
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
@@ -547,7 +542,7 @@ if uploaded_files:
 else:
     st.info("Please upload one or more .wav files to get started.")
 
-# 마이크 입력 (Streamlit Cloud 미지원)
+# 마이크 입력 (로컬에서만 작동)
 st.markdown("## 🎤 Real-Time Mic Recording")
 if st.secrets.get("IS_LOCAL", False):
     try:
@@ -558,20 +553,25 @@ if st.secrets.get("IS_LOCAL", False):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
                 tmpfile.write(audio_bytes)
                 tmpfile_path = tmpfile.name
+
+            n_mfcc = 13 if model_option == "SVM" else 29
             y, sr = librosa.load(tmpfile_path)
-            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=29)
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
             mfcc_mean = np.mean(mfcc, axis=1)
             mfcc_std = np.std(mfcc, axis=1)
             features = np.concatenate((mfcc_mean, mfcc_std)).reshape(1, -1)
             features_scaled = scaler.transform(features)
+
             prediction_encoded = model.predict(features_scaled)
             prediction = label_encoder.inverse_transform(prediction_encoded)[0]
             st.success(f"🎶 Predicted Genre (Mic): `{prediction.capitalize()}`")
+
             if hasattr(model, "predict_proba"):
                 proba = model.predict_proba(features_scaled)[0]
                 classes = label_encoder.inverse_transform(model.classes_)
                 proba_dict = dict(zip(classes, proba))
                 st.bar_chart(proba_dict)
+
             if st.checkbox("Show MFCC Heatmap (Mic Input)"):
                 fig, ax = plt.subplots(figsize=(8, 4))
                 sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
