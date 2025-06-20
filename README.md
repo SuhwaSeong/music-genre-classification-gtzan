@@ -74,7 +74,7 @@ Contributions are welcome! If you are interested or have suggestions:
 **Suhwa Seong**
 
 * Email: [suhwa.seong86@gmail.com](mailto:suhwa.seong86@gmail.com)
-* GitHub: [https://github.com/SuhwaSeong/music-genre-classification-gtzan](https://github.com/SuhwaSeong/music-genre-classification-gtzan)
+* GitHub: [https://github.com/SuhwaSeong](https://github.com/SuhwaSeong)
 
 ---
 
