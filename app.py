@@ -138,7 +138,7 @@ lang_dict = {
 selected_lang = st.sidebar.selectbox("Language / \uc5b8\uc5b4", options=list(lang_dict.keys()), format_func=lambda x: lang_dict[x]["language_name"])
 texts = lang_dict[selected_lang]
 
-st.title(texts["title"])
+st.title(texts["title"].encode("utf-8", "ignore").decode("utf-8"))
 model_option = st.selectbox(texts["select_model"], ["Random Forest", "SVM", "CNN"])
 
 uploaded_file = st.file_uploader(texts["upload"], type=["wav"])
