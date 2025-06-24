@@ -11,6 +11,8 @@ import base64
 import gdown
 from io import BytesIO
 import tensorflow as tf
+import pickle
+from sklearn.metrics import confusion_matrix
 
 # 페이지 설정
 st.set_page_config(page_title="Music Genre Classifier", layout="centered")
@@ -22,7 +24,7 @@ def translate_text(text, dest_lang="en"):
         translated = translator.translate(text, dest=dest_lang)
         return translated.text
     except Exception as e:
-        st.warning(f"⚠️ 번역 실패: {e}")
+        st.warning(f"\u26a0\ufe0f \ubc88역 \uc2e4패: {e}")
         return text
 
 # 언어 선택
@@ -32,7 +34,7 @@ lang = st.sidebar.selectbox("Select language", ["en", "ko", "de", "fr", "es"])
 st.sidebar.info(translate_text("Please select a language and upload a .wav file.", lang))
 
 # 섹션 추가
-st.markdown("## 📊 Model Accuracy Comparison")
+st.markdown("## \ud83d\udcca Model Accuracy Comparison")
 
 # 정확도 CSV 파일 불러오기
 try:
@@ -40,50 +42,29 @@ try:
     acc_svm = pd.read_csv("svm_classification_report.csv", index_col=0).loc["accuracy"].values[0]
     acc_cnn = pd.read_csv("cnn_classification_report.csv", index_col=0).loc["accuracy"].values[0]
 except Exception as e:
-    st.error(f"⚠️ 정확도 파일을 불러오는 데 실패했습니다: {e}")
+    st.error(f"\u26a0\ufe0f \uc815확도 \ud30c일을 \ubd88러오는 데 \uc2e4패했습니다: {e}")
     st.stop()
 
-# 정확도 테이블
-df_acc = pd.DataFrame({
-    "Model": ["Random Forest", "SVM", "CNN"],
-    "Accuracy": [acc_rf, acc_svm, acc_cnn]
-})
-
-# 시각화
+# 정확도 테이블 및 시각화
+df_acc = pd.DataFrame({"Model": ["Random Forest", "SVM", "CNN"], "Accuracy": [acc_rf, acc_svm, acc_cnn]})
 fig, ax = plt.subplots()
 bars = ax.bar(df_acc["Model"], df_acc["Accuracy"], color=["orange", "lightgreen", "skyblue"])
 ax.set_ylim(0, 1)
 ax.set_title("Model Accuracy Comparison")
 ax.set_ylabel("Accuracy")
-
-# 막대 위에 정확도 텍스트 추가
 for bar in bars:
     height = bar.get_height()
     ax.text(bar.get_x() + bar.get_width()/2, height + 0.02, f"{height:.2%}", ha='center')
-
 st.pyplot(fig)
-
-
-# 모델 정확도 시각화
-def show_accuracy_chart():
-    try:
-        acc_rf = pd.read_csv("rf_classification_report.csv", index_col=0).loc["accuracy"].values[0]
-        acc_svm = pd.read_csv("svm_classification_report.csv", index_col=0).loc["accuracy"].values[0]
-        df_acc = pd.DataFrame({"Model": ["Random Forest", "SVM"], "Accuracy": [acc_rf, acc_svm]})
-        st.markdown(translate_text("### 📊 Model Accuracy Comparison", lang))
-        st.bar_chart(df_acc.set_index("Model"))
-    except Exception as e:
-        st.warning(translate_text("⚠️ Failed to load model accuracy chart.", lang))
-        st.exception(e)
 
 # 파일 다운로드 함수
 def download_file_if_missing(file_name, file_id):
     if not os.path.exists(file_name):
         try:
-            with st.spinner(f"📃 Downloading {file_name}..."):
+            with st.spinner(f"\ud83d\udcc3 Downloading {file_name}..."):
                 gdown.download(f"https://drive.google.com/uc?id={file_id}", file_name, quiet=False)
         except Exception as e:
-            st.error(f"❌ Failed to download: {file_name}")
+            st.error(f"\u274c Failed to download: {file_name}")
             st.exception(e)
             st.stop()
 
@@ -135,11 +116,11 @@ genre_labels = ['blues', 'classical', 'country', 'disco', 'hiphop',
                 'jazz', 'metal', 'pop', 'reggae', 'rock']
 
 # 제목
-st.title(translate_text("🎵 Music Genre Classifier (CNN included)", lang))
+st.title(translate_text("\ud83c\udfb5 Music Genre Classifier (CNN included)", lang))
 model_option = st.selectbox(translate_text("Select model", lang), ["Random Forest", "SVM", "CNN"])
 uploaded_file = st.file_uploader(translate_text("Upload a .wav file", lang), type=["wav"])
 
-# 예측
+# 예측 처리
 if uploaded_file:
     audio_bytes = uploaded_file.read()
     st.audio(audio_bytes, format="audio/wav")
@@ -152,38 +133,36 @@ if uploaded_file:
         predicted_label = genre_labels[predicted_index]
 
         st.success(f"{translate_text('Predicted genre:', lang)} `{predicted_label}`")
-        st.markdown(translate_text("### 🔍 Prediction Probabilities", lang))
+        st.markdown(translate_text("### \ud83d\udd0d Prediction Probabilities", lang))
         st.bar_chart(dict(zip(genre_labels, prediction[0])))
 
-    # confusion matrix 시각화
-    st.markdown(translate_text("### 🧩 CNN Confusion Matrix", lang))
-    try:
-        y_test = pd.read_csv("cnn_y_test.csv").values.flatten()
-        y_pred = pd.read_csv("cnn_y_pred.csv").values.flatten()
-        with open("label_encoder.pkl", "rb") as f:
-            label_encoder = pickle.load(f)
-
-        cm = confusion_matrix(y_test, y_pred)
-        fig_cm, ax = plt.subplots(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu",
-                    xticklabels=label_encoder.classes_,
-                    yticklabels=label_encoder.classes_)
-        ax.set_xlabel("Predicted")
-        ax.set_ylabel("True")
-        ax.set_title("Confusion Matrix - CNN")
-        st.pyplot(fig_cm)
-        plt.close(fig_cm)
-    except Exception as e:
-        st.warning(translate_text("⚠️ Failed to load confusion matrix. Please ensure CNN test data is available.", lang))
-        st.exception(e)
-
-        
         if st.checkbox(translate_text("Show Mel Spectrogram", lang)):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mel, cmap="YlGnBu", ax=ax)
             ax.set(title=translate_text("Mel Spectrogram", lang), xlabel="Time", ylabel="Mel Bands")
             st.pyplot(fig)
             plt.close(fig)
+
+        st.markdown(translate_text("### \ud83e\uddf9 CNN Confusion Matrix", lang))
+        try:
+            y_test = pd.read_csv("cnn_y_test.csv").values.flatten()
+            y_pred = pd.read_csv("cnn_y_pred.csv").values.flatten()
+            with open("label_encoder.pkl", "rb") as f:
+                label_encoder = pickle.load(f)
+
+            cm = confusion_matrix(y_test, y_pred)
+            fig_cm, ax = plt.subplots(figsize=(8, 6))
+            sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu",
+                        xticklabels=label_encoder.classes_,
+                        yticklabels=label_encoder.classes_)
+            ax.set_xlabel("Predicted")
+            ax.set_ylabel("True")
+            ax.set_title("Confusion Matrix - CNN")
+            st.pyplot(fig_cm)
+            plt.close(fig_cm)
+        except Exception as e:
+            st.warning(translate_text("\u26a0\ufe0f Failed to load confusion matrix. Please ensure CNN test data is available.", lang))
+            st.exception(e)
 
     else:
         model, scaler, label_encoder = load_model_files(model_option)
@@ -196,7 +175,7 @@ if uploaded_file:
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(features_scaled)[0]
             class_labels = label_encoder.classes_
-            st.markdown(translate_text("### 🔍 Prediction Probabilities", lang))
+            st.markdown(translate_text("### \ud83d\udd0d Prediction Probabilities", lang))
             st.bar_chart(dict(zip(class_labels, proba)))
 
         if st.checkbox(translate_text("Show MFCC Heatmap", lang)):
@@ -206,5 +185,5 @@ if uploaded_file:
             st.pyplot(fig)
             plt.close(fig)
 else:
-    st.info(translate_text("📂 Please upload a .wav file to begin.", lang))
+    st.info(translate_text("\ud83d\udcc2 Please upload a .wav file to begin.", lang))
 
