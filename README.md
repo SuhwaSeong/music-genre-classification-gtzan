@@ -71,5 +71,6 @@ Pull requests for improvements are always welcome!
 
 ```
 
-필요하면 더 도와드릴 부분 있으면 알려주세요!
+If you need any further assistance, feel free to let me know!
+
 ```
