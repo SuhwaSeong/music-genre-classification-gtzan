@@ -24,7 +24,7 @@ def translate_text(text, dest_lang="en"):
         translated = translator.translate(text, dest=dest_lang)
         return translated.text
     except Exception as e:
-        st.warning(f"\u26a0\ufe0f \ubc88역 \uc2e4패: {e}")
+        st.warning(f"\u26a0\ufe0f \ubc88역 실패: {e}")
         return text
 
 # 언어 선택
@@ -33,10 +33,9 @@ lang = st.sidebar.selectbox("Select language", ["en", "ko", "de", "fr", "es"])
 # 초기 안내
 st.sidebar.info(translate_text("Please select a language and upload a .wav file.", lang))
 
-# 섹션 추가
-emoji_title = "📊 Model Accuracy Comparison"
+# 설명 세그몬
+emoji_title = "\ud83d\udcca Model Accuracy Comparison"
 st.markdown(f"## {emoji_title}")
-
 
 # 정확도 CSV 파일 불러오기
 try:
@@ -44,7 +43,7 @@ try:
     acc_svm = pd.read_csv("svm_classification_report.csv", index_col=0).loc["accuracy"].values[0]
     acc_cnn = pd.read_csv("cnn_classification_report.csv", index_col=0).loc["accuracy"].values[0]
 except Exception as e:
-    st.error(f"\u26a0\ufe0f \uc815확도 \ud30c일을 \ubd88러오는 데 \uc2e4패했습니다: {e}")
+    st.error(f"\u26a0\ufe0f \uc815확도 파일 불러오기 실패: {e}")
     st.stop()
 
 # 정확도 테이블 및 시각화
@@ -70,7 +69,7 @@ def download_file_if_missing(file_name, file_id):
             st.exception(e)
             st.stop()
 
-# 필요한 파일 다운로드
+# 필요 파일 다운로드
 files_to_download = {
     "rf_model.pkl": "1oBV5HpsvgoCLr5CYLvrmR6wbMiNP89Gi",
     "svm_model.pkl": "1B3ftW3aIze7gC_QrDK7WAqROBs19jwHt",
@@ -82,7 +81,7 @@ files_to_download = {
 for file_name, file_id in files_to_download.items():
     download_file_if_missing(file_name, file_id)
 
-# 모델 불러오기
+# 모델 로드
 @st.cache_resource
 def load_cnn_model():
     cnn_model_path = "cnn_genre_model.keras"
@@ -99,7 +98,8 @@ def load_model_files(model_name):
     label_encoder = joblib.load("label_encoder.pkl")
     return model, scaler, label_encoder
 
-# 특징 추출 함수
+# 특징 추출
+
 def extract_features(audio_bytes, n_mfcc=13):
     y, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
@@ -122,7 +122,7 @@ st.title(translate_text("\ud83c\udfb5 Music Genre Classifier (CNN included)", la
 model_option = st.selectbox(translate_text("Select model", lang), ["Random Forest", "SVM", "CNN"])
 uploaded_file = st.file_uploader(translate_text("Upload a .wav file", lang), type=["wav"])
 
-# 예측 처리
+# 예측
 if uploaded_file:
     audio_bytes = uploaded_file.read()
     st.audio(audio_bytes, format="audio/wav")
@@ -137,6 +137,13 @@ if uploaded_file:
         st.success(f"{translate_text('Predicted genre:', lang)} `{predicted_label}`")
         st.markdown(translate_text("### \ud83d\udd0d Prediction Probabilities", lang))
         st.bar_chart(dict(zip(genre_labels, prediction[0])))
+
+        # 예측 결과 다운로드 (CSV)
+        result_df = pd.DataFrame({"Predicted Label": [predicted_label], "Model": ["CNN"]})
+        csv = result_df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="cnn_prediction.csv">\ud83d\udcc5 Download Prediction Result (CSV)</a>'
+        st.markdown(href, unsafe_allow_html=True)
 
         if st.checkbox(translate_text("Show Mel Spectrogram", lang)):
             fig, ax = plt.subplots(figsize=(8, 4))
@@ -180,6 +187,13 @@ if uploaded_file:
             st.markdown(translate_text("### \ud83d\udd0d Prediction Probabilities", lang))
             st.bar_chart(dict(zip(class_labels, proba)))
 
+        # 예측 결과 다운로드 (CSV)
+        result_df = pd.DataFrame({"Predicted Label": [pred_label[0]], "Model": [model_option]})
+        csv = result_df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="prediction_result.csv">\ud83d\udcc5 Download Prediction Result (CSV)</a>'
+        st.markdown(href, unsafe_allow_html=True)
+
         if st.checkbox(translate_text("Show MFCC Heatmap", lang)):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mfcc, cmap="YlGnBu", ax=ax)
@@ -188,4 +202,3 @@ if uploaded_file:
             plt.close(fig)
 else:
     st.info(translate_text("\ud83d\udcc2 Please upload a .wav file to begin.", lang))
-
