@@ -1,4 +1,3 @@
-````md
 # Music Genre Classifier (Multilingual)
 
 ## About
