@@ -1,31 +1,75 @@
 # Music Genre Classifier (Multilingual)
-# 음악 장르 분류기 (다국어 지원)
 
-This is a Streamlit app for classifying music genres using Random Forest, SVM, and CNN models.  
-Supports multiple languages with automatic translation using Google Translate.
+## About
 
-랜덤 포레스트, SVM, CNN 모델을 이용한 음악 장르 분류 Streamlit 앱입니다.  
-Google 번역을 활용한 자동 다국어 지원 기능이 포함되어 있습니다.
+This is a Streamlit web app that classifies music genres from audio (.wav) files.  
+It supports three machine learning models: Random Forest, Support Vector Machine (SVM), and Convolutional Neural Network (CNN).  
+The app also features automatic translation for a multilingual user interface using Google Translate.
 
 ## Features
-## 주요 기능
 
-- Upload `.wav` audio files for genre classification  
-  음악 `.wav` 파일 업로드로 장르 분류 가능  
-- Choose among three models: Random Forest, SVM, CNN  
-  세 가지 모델 중 선택 가능: 랜덤 포레스트, SVM, CNN  
-- View MFCC heatmaps and Mel spectrograms  
-  MFCC 히트맵 및 Mel 스펙트로그램 시각화  
-- Multilingual UI with automatic text translation  
-  자동 번역 기능을 포함한 다국어 사용자 인터페이스
+- Upload `.wav` audio files for music genre classification  
+- Choose from three models: Random Forest, SVM, or CNN  
+- Visualize MFCC heatmaps and Mel spectrograms  
+- Multilingual UI with automatic text translation (English, Korean, German, French, Spanish)  
 
-## Setup
-## 설치 방법
+## Installation and Running
 
-1. Clone the repository  
-   저장소를 복제하세요  
-2. Install dependencies:  
-   의존성 패키지 설치:
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/SuhwaSeong/music-genre-classification-gtzan.git
+cd music-genre-classification-gtzan
+````
+
+### 2. Install dependencies
+
+Install all required Python packages using:
 
 ```bash
 pip install -r requirements.txt
+```
+
+### 3. Run the app
+
+Start the Streamlit app by running:
+
+```bash
+streamlit run app.py
+```
+
+This will open the app in your default web browser.
+
+## How to Use
+
+1. Select your preferred language from the sidebar.
+2. Upload a `.wav` music file.
+3. Choose one of the three models (Random Forest, SVM, CNN).
+4. The app will predict and display the music genre.
+5. Optionally, visualize MFCC heatmaps or Mel spectrograms by checking the boxes.
+
+## Notes
+
+* On first run, the app will automatically download the CNN model and other required files.
+* The app is optimized to run on Python 3.10.
+* Translation uses the free Google Translate API via the `googletrans` library; translation accuracy may vary.
+
+## Supported Languages
+
+* English
+* Korean
+* German
+* French
+* Spanish
+
+## Contact & Contribution
+
+If you have questions or feature requests, please open an issue on GitHub.
+Pull requests for improvements are always welcome!
+
+**Enjoy classifying your music! 🎵**
+
+```
+
+필요하면 더 도와드릴 부분 있으면 알려주세요!
+```
