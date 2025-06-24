@@ -155,6 +155,29 @@ if uploaded_file:
         st.markdown(translate_text("### 🔍 Prediction Probabilities", lang))
         st.bar_chart(dict(zip(genre_labels, prediction[0])))
 
+    # confusion matrix 시각화
+    st.markdown(translate_text("### 🧩 CNN Confusion Matrix", lang))
+    try:
+        y_test = pd.read_csv("cnn_y_test.csv").values.flatten()
+        y_pred = pd.read_csv("cnn_y_pred.csv").values.flatten()
+        with open("label_encoder.pkl", "rb") as f:
+            label_encoder = pickle.load(f)
+
+        cm = confusion_matrix(y_test, y_pred)
+        fig_cm, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu",
+                    xticklabels=label_encoder.classes_,
+                    yticklabels=label_encoder.classes_)
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("True")
+        ax.set_title("Confusion Matrix - CNN")
+        st.pyplot(fig_cm)
+        plt.close(fig_cm)
+    except Exception as e:
+        st.warning(translate_text("⚠️ Failed to load confusion matrix. Please ensure CNN test data is available.", lang))
+        st.exception(e)
+
+        
         if st.checkbox(translate_text("Show Mel Spectrogram", lang)):
             fig, ax = plt.subplots(figsize=(8, 4))
             sns.heatmap(mel, cmap="YlGnBu", ax=ax)
