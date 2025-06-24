@@ -1,54 +1,31 @@
-# 🎵 Music Genre Classification with GTZAN
+# Music Genre Classifier (Multilingual)
+# 음악 장르 분류기 (다국어 지원)
 
-A multilingual music genre classification web app built with Streamlit. It classifies `.wav` audio files into genres using machine learning models including CNN, Random Forest, and SVM. The app supports 18 languages and offers intuitive audio upload, real-time recording, and visual outputs such as MFCC heatmaps and prediction probabilities.
+This is a Streamlit app for classifying music genres using Random Forest, SVM, and CNN models.  
+Supports multiple languages with automatic translation using Google Translate.
 
-## 📂 Dataset
+랜덤 포레스트, SVM, CNN 모델을 이용한 음악 장르 분류 Streamlit 앱입니다.  
+Google 번역을 활용한 자동 다국어 지원 기능이 포함되어 있습니다.
 
-- **GTZAN Genre Collection**  
-  10 genres × 100 samples (30-second `.wav` files)  
-  Source: [Kaggle - GTZAN Dataset](https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification)
+## Features
+## 주요 기능
 
-## 🧠 Models Used
+- Upload `.wav` audio files for genre classification  
+  음악 `.wav` 파일 업로드로 장르 분류 가능  
+- Choose among three models: Random Forest, SVM, CNN  
+  세 가지 모델 중 선택 가능: 랜덤 포레스트, SVM, CNN  
+- View MFCC heatmaps and Mel spectrograms  
+  MFCC 히트맵 및 Mel 스펙트로그램 시각화  
+- Multilingual UI with automatic text translation  
+  자동 번역 기능을 포함한 다국어 사용자 인터페이스
 
-| Model           | Description                                     | Accuracy |
-|----------------|--------------------------------------------------|----------|
-| 🎲 Random Forest | MFCC features + classic ensemble learning       | ~64%     |
-| 🔍 SVM           | Support Vector Machine with MFCC input          | ~61%     |
-| 🧠 CNN (NEW)     | Deep learning model using mel spectrogram images | TBD      |
+## Setup
+## 설치 방법
 
-> CNN model is under training and will soon be integrated into the app.
+1. Clone the repository  
+   저장소를 복제하세요  
+2. Install dependencies:  
+   의존성 패키지 설치:
 
-## 🚀 Features
-
-- 🎧 Upload or record `.wav` files
-- 🌍 Multilingual UI (18 languages)
-- 🔥 Visual MFCC heatmaps
-- 📈 Display prediction probabilities
-- 📦 Downloadable classification reports
-
-## 🛠️ Tech Stack
-
-- Python, Streamlit, NumPy, Librosa, Scikit-learn, TensorFlow/Keras
-- Matplotlib, Seaborn, Pandas
-- Streamlit-webrtc (for real-time recording)
-
-## 🖥️ Demo
-
-Try the live app 👉  
-[https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/](https://music-genre-classification-gtzan-kbaft4cdqz6hd69hxkuwas.streamlit.app/)
-
-## 📌 To Do
-
-- [x] Add multilingual support  
-- [x] Add MFCC + heatmap display  
-- [x] Add model selection (RF, SVM)  
-- [ ] Train & integrate CNN  
-- [ ] Improve performance with data augmentation  
-- [ ] Add user feedback form for continuous learning  
-
-## 📄 License
-
-MIT License  
-Feel free to use, modify, and contribute.
-
----
+```bash
+pip install -r requirements.txt
