@@ -34,7 +34,9 @@ lang = st.sidebar.selectbox("Select language", ["en", "ko", "de", "fr", "es"])
 st.sidebar.info(translate_text("Please select a language and upload a .wav file.", lang))
 
 # 섹션 추가
-st.markdown("## \ud83d\udcca Model Accuracy Comparison")
+emoji_title = "📊 Model Accuracy Comparison"
+st.markdown(f"## {emoji_title}")
+
 
 # 정확도 CSV 파일 불러오기
 try:
