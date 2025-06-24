@@ -81,13 +81,23 @@ for f, fid in files_to_download.items():
 
 @st.cache_resource
 def load_cnn_model():
-    cnn_model_path = "cnn_genre_model.h5"
+    cnn_model_path = "cnn_genre_model.keras"
     if not os.path.exists(cnn_model_path):
-        with st.spinner("📥 Downloading CNN model (.h5) from Google Drive..."):
-            gdown.download("https://drive.google.com/uc?id=1ZvB83SkO3bY7q3TXd9A5th25MnRIGlYF", cnn_model_path, quiet=False)
-    model = tf.keras.models.load_model(cnn_model_path, compile=False)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    return model
+        with st.spinner("📥 Downloading CNN model from Google Drive..."):
+            gdown.download(
+                "https://drive.google.com/uc?id=1y-OF_0qDIeCj_Cxo3GEYVc4fv_bMu_O2",
+                cnn_model_path,
+                quiet=False
+            )
+    try:
+        model = tf.keras.models.load_model(cnn_model_path, compile=False)
+        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return model
+    except Exception as e:
+        st.error("❌ Failed to load CNN model.")
+        st.exception(e)
+        st.stop()
+
 
 def load_model_files(name):
     model = joblib.load(f"{name.lower()}_model.pkl")
