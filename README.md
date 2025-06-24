@@ -120,17 +120,3 @@ Suhwa Seong
 🎓 Master’s in Data Science | 🎤 Background in Vocal Music
 📍 Brandenburg an der Havel, Germany
 🔗 LinkedIn | GitHub
-
-
----
-
----
-
-필요한 경우 다음도 함께 만들어드릴 수 있습니다:
-
-- `requirements.txt` (라이브러리 목록)
-- `.streamlit/config.toml` (Python 버전 고정용)
-- `.gitattributes` or `.gitignore` 파일
-
-GitHub에 업로드하신 후 확인 원하시면 링크를 주셔도 됩니다!
-
