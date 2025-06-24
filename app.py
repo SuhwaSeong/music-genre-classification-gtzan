@@ -31,6 +31,39 @@ lang = st.sidebar.selectbox("Select language", ["en", "ko", "de", "fr", "es"])
 # 초기 안내
 st.sidebar.info(translate_text("Please select a language and upload a .wav file.", lang))
 
+# 섹션 추가
+st.markdown("## 📊 Model Accuracy Comparison")
+
+# 정확도 CSV 파일 불러오기
+try:
+    acc_rf = pd.read_csv("rf_classification_report.csv", index_col=0).loc["accuracy"].values[0]
+    acc_svm = pd.read_csv("svm_classification_report.csv", index_col=0).loc["accuracy"].values[0]
+    acc_cnn = pd.read_csv("cnn_classification_report.csv", index_col=0).loc["accuracy"].values[0]
+except Exception as e:
+    st.error(f"⚠️ 정확도 파일을 불러오는 데 실패했습니다: {e}")
+    st.stop()
+
+# 정확도 테이블
+df_acc = pd.DataFrame({
+    "Model": ["Random Forest", "SVM", "CNN"],
+    "Accuracy": [acc_rf, acc_svm, acc_cnn]
+})
+
+# 시각화
+fig, ax = plt.subplots()
+bars = ax.bar(df_acc["Model"], df_acc["Accuracy"], color=["orange", "lightgreen", "skyblue"])
+ax.set_ylim(0, 1)
+ax.set_title("Model Accuracy Comparison")
+ax.set_ylabel("Accuracy")
+
+# 막대 위에 정확도 텍스트 추가
+for bar in bars:
+    height = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, height + 0.02, f"{height:.2%}", ha='center')
+
+st.pyplot(fig)
+
+
 # 모델 정확도 시각화
 def show_accuracy_chart():
     try:
