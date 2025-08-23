@@ -67,7 +67,17 @@ git clone https://github.com/SuhwaSeong/music-genre-classification-gtzan.git
 cd music-genre-classification-gtzan
 pip install -r requirements.txt
 streamlit run app.py
+
 ````
+## Problem & Solution (KR/EN)
+
+**[KR 문제]** 데이터가 적은 오디오 분류에서 과적합을 줄이는 3가지 방법을 제시하라.  
+**[KR 해설(요지)]** 데이터 증강(노이즈/타임시프트/피치 변경), 규제(Dropout/L2), 검증전략(Stratified K-Fold + Early Stopping).
+
+**[EN Problem]** Propose three strategies to reduce overfitting in low-data audio classification.  
+**[EN Solution (summary)]** Augmentation (noise/time-shift/pitch), Regularization (Dropout/L2), Validation (stratified k-fold + early stopping).
+
+**Rubric (10)** Coverage(3) • Justification(3) • Practicality(2) • Clarity(2)
 
 ---
 
